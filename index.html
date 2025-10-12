@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<!-- =================================================================== -->
+<!-- =========== MID-TIER SECURITY ENHANCEMENTS (REVISED) ============ -->
+<!-- =================================================================== -->
+
+<!-- 1. Content Security Policy (CSP) - Standard Level -->
+<!-- This policy is less strict, allowing inline scripts and styles, which is common but less secure than a hash-based approach. -->
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' https://api.qrserver.com data:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CivicSuite - Offline Capable</title>
+<!-- Google Fonts: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Subresource Integrity (SRI) removed for less strict security -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+
+<!-- =================================================================== -->
+<!-- ================= END OF SECURITY ENHANCEMENTS ================== -->
+<!-- =================================================================== -->
+
+<style>
+/* --- CSS VARIABLES & GLOBAL STYLES --- */
+:root {
+--p-bg: #f4f7fe;
+--p-surface: #ffffff;
+--p-primary: #4f46e5;
+--p-secondary: #059669;
+--gray-100: #f3f4f6;
+--gray-200: #e5e7eb;
+--gray-300: #d1d5db;
+--gray-400: #9ca3af;
+--gray-500: #6b7280;
+--gray-600: #4b5563;
+--gray-700: #374151;
+--gray-800: #1f2937;
+--blue-500: #3b82f6;
+--yellow-500: #eab308;
+--green-500: #22c55e;
+--red-500: #ef4444;
+--border-color: rgba(229, 231, 235, 0.6);
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+code
+Code
+download
+content_copy
+expand_less
+body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--p-bg);
+        margin: 0;
+        overflow-x: hidden;
+    }
+    
+    /* --- SVG ICON STYLES --- */
+    .icon-svg {
+        display: inline-block;
+        width: 1.2em;
+        height: 1.2em;
+        stroke-width: 0;
+        stroke: currentColor;
+        fill: currentColor;
+        vertical-align: middle;
+    }
+    
+    /* --- KEYFRAMES --- */
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    @keyframes toast-in {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+    }
+    .spinner {
+        animation: spin 1s linear infinite;
+        width: 1.25rem; /* 20px */
+        height: 1.25rem; /* 20px */
+        border: 2px solid var(--gray-200);
+        border-top-color: white;
+        border-radius: 50%;
+        margin-right: 0.5rem; /* 8px */
+    }
+    
+    /* --- LAYOUT: SIDEBAR & MAIN --- */
+    .sidebar {
+        width: 16rem; /* 256px */
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 40;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        border-right: 1px solid var(--border-color);
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        transition: margin-left 0.3s ease-in-out;
+    }
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+        display: none;
+    }
+    .sidebar-overlay.visible {
+        display: block;
+    }
+    
+    @media (min-width: 768px) {
+        .sidebar { transform: translateX(0); }
+        .main-content { margin-left: 16rem; }
+        .sidebar-overlay { display: none !important; }
+    }
+
+    /* --- SIDEBAR COMPONENTS --- */
+    .sidebar-header {
+        padding: 1rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-header h1 {
+        font-size: 1.5rem; /* 24px */
+        font-weight: 800;
+        background-image: linear-gradient(to right, var(--p-primary), var(--p-secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .sidebar-nav {
+        margin-top: 2rem;
+        padding: 0 1rem;
+    }
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem; /* 12px 16px */
+        border-radius: 0.5rem; /* 8px */
+        transition: all 0.2s;
+        text-decoration: none;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem; /* 8px */
+    }
+    .sidebar-link .icon-svg {
+        font-size: 1.5rem; /* 24px */
+        width: 1.5rem;
+        height: 1.5rem;
+        transition: transform 0.2s;
+    }
+    .sidebar-link span {
+        margin-left: 1rem;
+        font-weight: 600;
+    }
+    .sidebar-link:not(.active):hover {
+        background-color: #eef2ff;
+        color: var(--p-primary);
+    }
+    .sidebar-link.active {
+        background-image: linear-gradient(to right, var(--p-primary), var(--p-secondary));
+        color: white;
+        box-shadow: 0 4px 10px -2px rgba(79, 70, 229, 0.4);
+    }
+    .sidebar-link.active .icon-svg {
+        transform: scale(1.1);
+    }
+    
+    /* --- HEADER --- */
+    .main-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .header-left {
+        display: flex;
+        align-items: center;
+    }
+    #menu-toggle-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--gray-700);
+        padding: 0.25rem;
+    }
+    #menu-toggle-button .icon-svg { font-size: 1.875rem; width: 1.875rem; height: 1.875rem; }
+    #view-title {
+        margin-left: 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-800);
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .user-last-login p {
+        font-size: 0.75rem;
+        margin: 0;
+    }
+    .user-last-login .login-time { color: var(--gray-500); }
+    .user-last-login .login-ip { color: var(--gray-400); }
+    .notifications-wrapper { position: relative; }
+    #notifications-toggle {
+        background: none; border: none; cursor: pointer; color: var(--gray-600); position: relative;
+    }
+    #notifications-toggle:hover { color: var(--p-primary); }
+    #notifications-toggle .icon-svg { font-size: 1.5rem; width: 1.5rem; height: 1.5rem;}
+    #notification-dot {
+        position: absolute;
+        top: -0.25rem;
+        right: -0.25rem;
+        width: 0.75rem;
+        height: 0.75rem;
+        background-color: var(--red-500);
+        border-radius: 50%;
+        border: 2px solid white;
+    }
+    #notifications-panel {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        width: 20rem; /* 320px */
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--gray-200);
+        z-index: 50;
+    }
+    .user-avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        background-image: linear-gradient(to bottom right, var(--p-primary), var(--p-secondary));
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.125rem;
+    }
+
+    @media (min-width: 768px) {
+        #menu-toggle-button { display: none; }
+        #view-title { margin-left: 0; }
+    }
+    @media (max-width: 640px) {
+        .user-last-login { display: none; }
+    }
+    
+    /* --- VIEW CONTAINER --- */
+    .view-container {
+        padding: 2rem;
+    }
+    .view-content {
+        display: none;
+    }
+    .view-content.active {
+        display: block;
+    }
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+    .page-header h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0;
+    }
+    .page-header p {
+        color: var(--gray-500);
+        margin: 0;
+    }
+
+    /* --- DASHBOARD VIEW --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .stat-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        transition: transform 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+    .stat-card-urgent {
+        background-color: #fef2f2;
+        border-color: #fecaca;
+    }
+    .stat-card-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .stat-card-text .label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--gray-500);
+    }
+    .stat-card-text .value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    .stat-card-icon {
+        padding: 0.75rem;
+        border-radius: 50%;
+    }
+    .stat-card-icon .icon-svg {
+        font-size: 1.875rem;
+        width: 1.875rem;
+        height: 1.875rem;
+    }
+    #db-stat-open { color: var(--blue-500); }
+    .icon-open { background-color: #dbeafe; color: var(--blue-500); }
+    #db-stat-progress { color: var(--yellow-500); }
+    .icon-progress { background-color: #fef9c3; color: var(--yellow-500); }
+    #db-stat-resolved { color: var(--green-500); }
+    .icon-resolved { background-color: #dcfce7; color: var(--green-500); }
+    #db-stat-urgent { color: var(--red-500); }
+    .icon-urgent { background-color: #fee2e2; color: var(--red-500); }
+    .stat-card-urgent .label { color: #b91c1c; }
+
+    .dashboard-list-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+    }
+    .dashboard-list-card h4 {
+        font-weight: 700;
+        color: var(--gray-800);
+        font-size: 1.125rem;
+        margin: 0 0 1rem 0;
+    }
+    #most-upvoted-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .dashboard-action-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .dashboard-action-card h4 { font-weight: 700; color: var(--gray-800); font-size: 1.125rem; margin: 0 0 0.5rem 0; }
+    .dashboard-action-card p { font-size: 0.875rem; color: var(--gray-500); margin-bottom: 1rem; }
+    .btn-2fa {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 600;
+        background-image: linear-gradient(to right, #22c55e, #14b8a6);
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+    }
+    .btn-2fa:hover { opacity: 0.9; }
+    .btn-2fa .icon-svg { margin-left: 0.5rem; }
+
+    @media (min-width: 768px) {
+        .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        .full-span { grid-column: span 2 / span 2; }
+    }
+    @media (min-width: 1024px) {
+        .dashboard-grid { grid-template-columns: repeat(4, 1fr); }
+        .lg-span-2 { grid-column: span 2 / span 2; }
+    }
+
+    /* --- FORM STYLES (New Report, Media) --- */
+    .form-view-wrapper {
+        max-width: 48rem; /* 768px */
+        margin: 0 auto;
+    }
+    .form-container {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: var(--shadow-xl);
+        border: 1px solid var(--gray-200);
+    }
+    .form-container h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin-bottom: 1.5rem;
+    }
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+        .form-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .full-width {
+         grid-column: 1 / -1;
+    }
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .form-input, .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #f9fafb;
+        border: 1px solid var(--gray-300);
+        border-radius: 0.5rem;
+        transition: box-shadow 0.2s;
+        box-sizing: border-box; /* Important for width 100% */
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        box-shadow: 0 0 0 2px var(--p-primary);
+        outline: none;
+    }
+    .form-button {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 600;
+        background-image: linear-gradient(to right, var(--p-primary), var(--p-secondary));
+        border: none;
+        cursor: pointer;
+        transition: transform 0.2s, opacity 0.2s;
+        box-shadow: 0 4px 10px -2px rgba(79, 70, 229, 0.5);
+    }
+    .form-button:hover {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
+    .form-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    .form-button .icon-svg { margin-left: 0.5rem; }
+    
+    /* Category Button Grid */
+    #issue-category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.75rem;
+    }
+    .category-btn {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        background-color: var(--gray-100);
+        color: var(--gray-800);
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    .category-btn:hover {
+        background-color: var(--gray-200);
+        border-color: var(--gray-300);
+    }
+    .category-btn.selected {
+        background-color: #eef2ff;
+        color: var(--p-primary);
+        border-color: var(--p-primary);
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+
+    /* AI Button Specifics */
+    .ai-button {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        color: var(--p-primary);
+        font-weight: 600;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+    .ai-button:hover { color: #3730a3; }
+    .ai-button:disabled { opacity: 0.5; cursor: wait; }
+    .ai-button .icon-svg { margin-right: 0.25rem; }
+    
+    .label-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .form-error-message {
+        color: var(--red-500);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    /* --- MY REPORTS VIEW --- */
+    .reports-toolbar {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--gray-200);
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    #report-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 9999px;
+        background-color: var(--gray-100);
+        color: var(--gray-800);
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .filter-btn:hover { background-color: var(--gray-200); }
+    .filter-btn.active {
+        background-color: var(--p-primary);
+        color: white;
+    }
+    #export-csv-button {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        color: white;
+        background-color: var(--p-secondary);
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        box-shadow: var(--shadow-sm);
+    }
+    #export-csv-button:hover { background-color: #047857; }
+    #export-csv-button .icon-svg { margin-right: 0.5rem; }
+    
+    #reports-list-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Report Item Card */
+    .report-card {
+        background-color: white;
+        border-radius: 0.75rem;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+        transition: box-shadow 0.3s, transform 0.3s;
+        cursor: pointer;
+    }
+    .report-card:hover { 
+        box-shadow: var(--shadow-xl); 
+        transform: translateY(-2px);
+    }
+    .report-card-main {
+        padding: 1.25rem;
+    }
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    .report-title {
+        font-weight: 700;
+        color: var(--gray-800);
+        font-size: 1.125rem;
+        margin: 0;
+    }
+    .report-tags {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .tag {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 9999px;
+    }
+    .tag-priority { border: 1px solid; }
+    .tag-status-reported { background-color: #dbeafe; color: #1e40af; }
+    .tag-status-inprogress { background-color: #fef9c3; color: #854d0e; }
+    .tag-status-resolved { background-color: #dcfce7; color: #15803d; }
+    .tag-priority-low { border-color: var(--gray-300); color: var(--gray-600); }
+    .tag-priority-medium { border-color: #facc15; color: #a16207; }
+    .tag-priority-high { border-color: var(--red-500); color: #dc2626; }
+
+    .report-location {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        margin-bottom: 1rem;
+    }
+    .report-location .icon-svg { margin-right: 0.5rem; color: var(--gray-400); }
+    .report-description { color: var(--gray-600); }
+    .report-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 1rem;
+    }
+    .upvote-button {
+        display: flex;
+        align-items: center;
+        font-weight: 700;
+        color: var(--p-primary);
+        background: none; border: none; cursor: pointer;
+    }
+    .upvote-button .icon-svg { font-size: 1.5rem; width:1.5rem; height:1.5rem; margin-right: 0.25rem; }
+    
+    /* --- MEDIA UPLOAD VIEW --- */
+    .file-upload-input {
+        width: 100%;
+        font-size: 0.875rem;
+        color: var(--gray-500);
+    }
+    .file-upload-input::file-selector-button {
+        margin-right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        border: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    #mediaPhoto::file-selector-button { background-color: #eef2ff; color: #4338ca; }
+    #mediaPhoto::file-selector-button:hover { background-color: #e0e7ff; }
+    #mediaVideo::file-selector-button { background-color: #f0fdf4; color: #15803d; }
+    #mediaVideo::file-selector-button:hover { background-color: #dcfce7; }
+    
+    .file-preview-box {
+        margin-top: 1rem;
+        padding: 0.5rem;
+        border: 1px dashed var(--gray-200);
+        border-radius: 0.5rem;
+        background-color: rgba(249, 250, 251, 0.5);
+        min-height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .file-preview-box img, .file-preview-box video {
+        max-height: 12rem; /* 192px */
+        border-radius: 0.375rem;
+    }
+    .file-preview-box .placeholder {
+        color: var(--gray-400);
+        font-size: 0.875rem;
+    }
+
+    /* --- KNOWLEDGE BASE VIEW --- */
+    .kb-view-wrapper {
+        max-width: 56rem; /* 896px */
+        margin: 0 auto;
+    }
+    .kb-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .kb-header h2 { font-size: 1.875rem; font-weight: 800; color: var(--gray-800); }
+    .kb-header p { margin-top: 0.5rem; color: var(--gray-500); }
+
+    .kb-search-wrapper {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    #kb-search {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        background-color: white;
+        border: 1px solid var(--gray-300);
+        border-radius: 9999px;
+        box-shadow: var(--shadow-sm);
+        box-sizing: border-box;
+    }
+    .kb-search-wrapper .icon-svg {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-400);
+        font-size: 1.25rem;
+    }
+    
+    /* --- MODAL --- */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background-color: rgba(0, 0, 0, 0.6);
+        transition: opacity 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .modal-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .modal-content {
+        background-color: white;
+        border-radius: 1rem;
+        box-shadow: var(--shadow-2xl);
+        max-width: 95%;
+        width: 100%;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    .modal-overlay.visible .modal-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+    
+    #2fa-modal .modal-content { max-width: 28rem; padding: 2rem; }
+    #2fa-modal h3 { font-size: 1.5rem; font-weight: 700; color: var(--gray-800); text-align: center; }
+    #2fa-modal p { text-align: center; color: var(--gray-500); margin-top: 0.5rem; }
+    #2fa-modal img { display: block; margin: 1.5rem auto; padding: 0.5rem; border: 1px solid var(--gray-200); border-radius: 0.5rem; }
+    .modal-close-btn {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 600;
+        background-color: var(--p-primary);
+        border: none;
+        cursor: pointer;
+    }
+    .modal-close-btn:hover { background-color: #4338ca; }
+    
+    /* Full Report Detail Modal */
+    #report-details-modal .modal-content { max-width: 56rem; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--gray-200); }
+    .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin: 0; }
+    .modal-body { padding: 1.5rem; max-height: 70vh; overflow-y: auto; }
+    .modal-close-icon { background:none; border:none; cursor: pointer; color: var(--gray-400); padding: 0.25rem; }
+    .modal-close-icon:hover { color: var(--gray-800); }
+    
+    /* Toast Notifications */
+    #toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .toast {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-xl);
+        color: white;
+        font-weight: 600;
+        animation: toast-in 0.5s ease;
+    }
+    .toast-success { background-image: linear-gradient(to right, var(--p-secondary), #065f46); }
+    .toast-error { background-image: linear-gradient(to right, #ef4444, #b91c1c); }
+    .toast-info { background-image: linear-gradient(to right, #3b82f6, #1d4ed8); }
+
+</style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<aside id="sidebar" class="sidebar">
+<div class="sidebar-header"><h1>CivicSuite</h1></div>
+<nav id="sidebar-nav" class="sidebar-nav">
+<a href="#" data-view="dashboardView" class="sidebar-link active"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect x="48" y="48" width="176" height="176" rx="20" ry="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="288" y="48" width="176" height="176" rx="20" ry="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="48" y="288" width="176" height="176" rx="20" ry="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="288" y="288" width="176" height="176" rx="20" ry="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><span>Dashboard</span></a>
+<a href="#" data-view="newReportView" class="sidebar-link"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M384 224v184a40 40 0 01-40 40H104a40 40 0 01-40-40V168a40 40 0 0140-40h167.48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M459.94 53.94a16.06 16.06 0 00-22.62.06L232 259.06 200 291.06l32 32 205.06-205.06a16.06 16.06 0 00.06-22.62zM288 160l-48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><span>File a Report</span></a>
+<a href="#" data-view="myReportsView" class="sidebar-link"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M432 112H80a48 48 0 00-48 48v192a48 48 0 0048 48h352a48 48 0 0048-48V160a48 48 0 00-48-48z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path d="M32 256h448" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M112 112V80a32 32 0 0132-32h224a32 32 0 0132 32v32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><span>My Reports</span></a>
+<a href="#" data-view="mediaUploadView" class="sidebar-link"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M320 367.79h76c55 0 100-29.21 100-83.6s-53-81.47-96-83.6c-8.89-85.06-71-136.8-144-136.8-69 0-113.44 45.79-128 91.2-60 5.7-112 43.88-112 106.4s54 106.4 120 106.4h56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M320 255.79l-64-64-64 64M256 448.21V207.79"/></svg><span>Media Hub</span></a>
+<a href="#" data-view="knowledgeBaseView" class="sidebar-link"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 160c16-63.16 76.43-95.41 208-96a16 16 0 0116 16v288a16 16 0 01-16 16c-128 0-177.45 25.81-208 64-30.37-38-80-64-208-64-16 0-16-9-16-16V80a16 16 0 0116-16c131.57.59 192 32.84 208 96zM256 160v288" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><span>Knowledge Base</span></a>
+</nav>
+</aside>
+
+<!-- Main Content Area -->
+<main id="main-content" class="main-content">
+<header class="main-header">
+<div class="header-content">
+<div class="header-left">
+<button id="menu-toggle-button"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M80 160h352M80 256h352M80 352h352"/></svg></button>
+<h2 id="view-title">Dashboard</h2>
+</div>
+<div class="header-right">
+<div class="user-last-login">
+<p class="login-time">Last Login: Oct 27, 2025 10:30 AM</p>
+<p class="login-ip">IP: 192.168.1.101</p>
+</div>
+<div class="notifications-wrapper">
+<button id="notifications-toggle">
+<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.73-73.87 41.32-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.83-19.55 17.19-32.57zM304 416a48 48 0 01-96 0" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/></svg>
+<div id="notification-dot"></div>
+</button>
+<div id="notifications-panel" class="animate-fade-in"></div>
+</div>
+<div class="user-avatar">U</div>
+</div>
+</div>
+</header>
+
+<div id="view-container" class="view-container">
+    <!-- VIEW 1: Dashboard -->
+    <div id="dashboardView" class="view-content active animate-fade-in">
+         <div class="page-header"><h3>Command Center</h3><p>Real-time operational overview.</p></div>
+        <div class="dashboard-grid">
+            <div class="stat-card"><div class="stat-card-content"><div class="stat-card-text"><p class="label">Reported</p><p id="db-stat-open" class="value">0</p></div><div class="stat-card-icon icon-open"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M448 192H216a32.1 32.1 0 00-32 32v160a32.1 32.1 0 0032 32h232a32.1 32.1 0 0032-32V224a32.1 32.1 0 00-32-32z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M184 224H120a32.1 32.1 0 01-32-32V96a32.1 32.1 0 0132-32h272a32.1 32.1 0 0132 32v32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg></div></div></div>
+            <div class="stat-card"><div class="stat-card-content"><div class="stat-card-text"><p class="label">In Progress</p><p id="db-stat-progress" class="value">0</p></div><div class="stat-card-icon icon-progress"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M128 320h256" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M128 192h256" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M112.23 64.06l-42.05 42.05a31.83 31.83 0 00-9.4 22.56v254.8a31.93 31.93 0 0032 31.87h287.26a31.93 31.93 0 0032-31.87V128.67a31.83 31.83 0 00-9.4-22.56l-42.05-42.05A32.12 32.12 0 00336.19 55H175.81a32.12 32.12 0 00-22.62 9.06z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path d="M256 192v128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg></div></div></div>
+            <div class="stat-card"><div class="stat-card-content"><div class="stat-card-text"><p class="label">Resolved</p><p id="db-stat-resolved" class="value">0</p></div><div class="stat-card-icon icon-resolved"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48zm-22.46 292.62l-64-64L192 354.08l86.46-86.46 22.46-22.46 22.46 22.46L412.08 169.92 434.54 192l-158.54 158.54z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path d="M336.88 192.62L237.54 292.08" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg></div></div></div>
+            <div class="stat-card stat-card-urgent"><div class="stat-card-content"><div class="stat-card-text"><p class="label">Urgent Issues</p><p id="db-stat-urgent" class="value">0</p></div><div class="stat-card-icon icon-urgent"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 80c-8.66 0-16.58 4.34-21.41 11.29l-184 272c-9.08 13.44-1.92 32.71 14.41 32.71h368c16.33 0 23.49-19.27 14.41-32.71l-184-272C272.58 84.34 264.66 80 256 80z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M256 192v96M256 320h.01" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg></div></div></div>
+            
+            <div class="dashboard-list-card lg-span-2"><h4>Most Upvoted Issues</h4><div id="most-upvoted-list"></div></div>
+            
+            <div class="dashboard-action-card lg-span-2">
+                <div><h4>Secure Your Account</h4><p>Protect your account from unauthorized access by enabling Two-Factor Authentication (2FA).</p></div>
+                <button id="setup-2fa-button" class="btn-2fa">Enable 2FA <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48C141.31 48 48 141.31 48 256s93.31 208 208 208 208-93.31 208-208S370.69 48 256 48zm120.25 152.25l-132.5 132.5a12 12 0 01-17 0l-68.25-68.25a12 12 0 0117-17l59.75 59.75 124-124a12 12 0 0117 17z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/></svg></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: New Report Form -->
+    <div id="newReportView" class="view-content form-view-wrapper">
+         <div class="form-container"><h2>Report a Community Issue</h2><form id="new-report-form" novalidate>
+             <div class="form-group full-width">
+                <div class="label-group">
+                    <label for="issueCategory" class="form-label">Issue Category</label>
+                </div>
+                <select id="issueCategory" required class="form-select">
+                    <option value="" disabled selected>Please select an issue type</option>
+                </select>
+                <div class="form-error-message" data-for="issueCategory"></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="issueLocation" class="form-label">Address or Location</label>
+                    <input type="text" id="issueLocation" required placeholder="e.g., Corner of Main St & 2nd Ave" class="form-input"/>
+                    <div class="form-error-message" data-for="issueLocation"></div>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber" class="form-label">Phone Number (Optional)</label>
+                    <input type="tel" id="phoneNumber" placeholder="e.g., (555) 123-4567" class="form-input" pattern="^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$" />
+                    <div class="form-error-message" data-for="phoneNumber"></div>
+                </div>
+                <div class="form-group">
+                    <label for="wardSelection" class="form-label">Ward</label>
+                    <select id="wardSelection" required class="form-select">
+                        <option value="" disabled selected>Select a Ward</option>
+                        <option>Ward 1</option><option>Ward 2</option><option>Ward 3</option><option>Ward 4</option><option>Ward 5</option>
+                        <option>Ward 6</option><option>Ward 7</option><option>Ward 8</option><option>Ward 9</option><option>Ward 10</option>
+                    </select>
+                    <div class="form-error-message" data-for="wardSelection"></div>
+                </div>
+                 <div class="form-group">
+                    <label for="priorityLevel" class="form-label">Priority Level</label>
+                    <select id="priorityLevel" required class="form-select">
+                        <option>Low</option><option>Medium</option><option>High</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group full-width">
+                <div class="label-group">
+                    <label for="issueDescription" class="form-label">Detailed Description</label>
+                </div>
+                <textarea id="issueDescription" rows="5" required class="form-textarea" placeholder="Please describe the issue. The AI will automatically select a category and enhance the text for you."></textarea>
+                <div class="form-error-message" data-for="issueDescription"></div>
+            </div>
+            <!-- ACTION REQUIRED: Your server must generate and validate an anti-CSRF token for this form to be secure. -->
+            <!-- <input type="hidden" name="csrf_token" value="SERVER_GENERATED_TOKEN"> -->
+            <button type="submit" id="submit-report-button" class="form-button">Submit Secure Report <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M336 208v-95a80 80 0 00-160 0v95" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="96" y="208" width="320" height="272" rx="48" ry="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg></button>
+         </form></div>
+    </div>
+
+    <!-- VIEW 3: My Reports List -->
+    <div id="myReportsView" class="view-content">
+        <div class="reports-toolbar">
+            <div id="report-filters"><span style="font-weight: 600; color: var(--gray-600); margin-right: 0.5rem;">Filter:</span></div>
+            <button id="export-csv-button"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M320 336h76c55 0 100-21.21 100-75.6s-53-73.47-96-75.6C391.11 99.74 329 48 256 48c-69 0-113.44 45.79-128 91.2-60 5.7-112 35.88-112 98.4S70 336 136 336h56M192 400.1l64 63.9 64-63.9M256 224v224.03" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>Export CSV</button>
+        </div>
+        <div id="reports-list-container"></div>
+    </div>
+
+    <!-- VIEW 4: Media Upload Form -->
+    <div id="mediaUploadView" class="view-content form-view-wrapper">
+         <div class="form-container">
+            <h2>Upload Media Asset to the Hub</h2>
+            <form id="media-upload-form">
+                <div class="form-group"><label for="mediaName" class="form-label">Project Name / Title</label><input type="text" id="mediaName" required placeholder="e.g., Downtown Park Cleanup Initiative" class="form-input"/></div>
+                <div class="form-group">
+                    <div class="label-group">
+                        <label for="mediaDescription" class="form-label">Description</label>
+                    </div>
+                    <textarea id="mediaDescription" rows="4" required class="form-textarea" placeholder="Provide context or details about the media files..."></textarea>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="mediaPhoto" class="form-label">Upload Photo (Required)</label>
+                        <input type="file" id="mediaPhoto" name="mediaPhoto" accept="image/*" required class="file-upload-input"/>
+                        <div class="file-preview-box"><img id="photo-preview" style="display:none;" alt="Photo Preview"/><span id="photo-placeholder" class="placeholder">Image Preview</span></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mediaVideo" class="form-label">Upload Video (Optional)</label>
+                        <input type="file" id="mediaVideo" name="mediaVideo" accept="video/*" class="file-upload-input"/>
+                         <div class="file-preview-box"><video id="video-preview" style="display:none;" controls></video><span id="video-placeholder" class="placeholder">Video Preview</span></div>
+                    </div>
+                </div>
+                <!-- ACTION REQUIRED: Your server must generate and validate an anti-CSRF token for this form to be secure. -->
+                <!-- <input type="hidden" name="csrf_token" value="SERVER_GENERATED_TOKEN"> -->
+                <button type="submit" id="submit-media-button" class="form-button">Upload Media</button>
+            </form>
+         </div>
+    </div>
+    
+    <!-- VIEW 5: Knowledge Base -->
+    <div id="knowledgeBaseView" class="view-content kb-view-wrapper">
+        <div class="kb-header"><h2>Knowledge Base</h2><p>Find answers and solutions to common issues.</p></div>
+        <div class="kb-search-wrapper"><input type="text" id="kb-search" placeholder="Search articles..."/><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M221.09 64a157.09 157.09 0 10157.09 157.09A157.1 157.1 0 00221.09 64z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M338.29 338.29L448 448"/></svg></div>
+        <div id="knowledge-base-container"></div>
+    </div>
+</div>
+</main>
+
+<!-- Modal for 2FA -->
+<div id="2fa-modal" class="modal-overlay">
+<div class="modal-content">
+<h3>Enable Two-Factor Authentication</h3>
+<p>Scan the QR code with your authenticator app.</p>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/CivicSuite:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=CivicSuite" alt="QR Code">
+<button id="close-2fa-modal" class="modal-close-btn">Done</button>
+</div>
+</div>
+
+<!-- NEW: Modal for Full Report Details -->
+<div id="report-details-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-report-title" class="modal-title">Report Details</h3>
+            <button id="close-report-modal" class="modal-close-icon">
+                <svg class="icon-svg" style="width: 1.5rem; height: 1.5rem;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M400 145.49L366.51 112 256 222.51 145.49 112 112 145.49 222.51 256 112 366.51 145.49 400 256 289.49 366.51 400 400 366.51 289.49 256 400 145.49z"/></svg>
+            </button>
+        </div>
+        <div id="modal-report-body" class="modal-body">
+            <!-- Dynamic content will be injected here -->
+        </div>
+    </div>
+</div>
+
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<!-- NEW: Toast Notification Container -->
+<div id="toast-container"></div>
+
+<!-- DOMPurify library for sanitizing HTML to prevent XSS. -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+
+<!-- Main Application Script -->
+<script>
+// --- DATA SIMULATION & CONFIGURATION ---
+const issueCategories = ['Pothole', 'Streetlight Out', 'Missed Garbage', 'Drainage Issue', 'Vandalism', 'Traffic Signal', 'Broken Sidewalk', 'Fallen Tree', 'Noise Complaint', 'Abandoned Vehicle', 'Graffiti', 'Illegal Dumping', 'Park Maintenance', 'Water Leak', 'Sewer Backup', 'Rodent Complaint', 'Zoning Violation', 'Damaged Public Property', 'Unsafe Building', 'Overgrown Vegetation', 'Missing Street Sign', 'Other'];
+const userNotifications = [
+{ read: false, text: "Status for <strong>CV-003</strong> was updated to <strong>In Progress</strong>.", time: "15m ago" },
+{ read: false, text: "Your report <strong>CV-002</strong> was successfully resolved.", time: "1h ago" },
+{ read: true, text: "Welcome to the new CivicSuite platform!", time: "1d ago" }
+];
+// Default data if localStorage is empty
+const defaultReportsData = [
+{ id: 'CV-003', type: 'Drainage Issue', status: 'In Progress', priority: 'High', date: 'Oct 26, 2025', location: 'Elm Street, near the park', ward: 'Ward 3', phone: '', desc: 'The storm drain at the corner of Elm Street and Park Avenue is completely clogged with leaves and debris...', upvotes: 15, department: 'Public Works', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 26, 2025 09:00 AM'}, {user: 'Alice', action: 'Status changed to In Progress', timestamp: 'Oct 27, 2025 10:15 AM'}] },
+{ id: 'CV-002', type: 'Pothole', status: 'Resolved', priority: 'Medium', date: 'Oct 24, 2025', location: '123 Main St', ward: 'Ward 1', phone: '(555) 867-5309', desc: 'A large and dangerous pothole has formed in the westbound lane of Main Street...', upvotes: 28, department: 'Public Works', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 24, 2025 11:30 AM'}, {user: 'Alice', action: 'Status changed to Resolved', timestamp: 'Oct 25, 2025 02:00 PM'}] },
+{ id: 'CV-001', type: 'Missed Garbage', status: 'Reported', priority: 'Low', date: 'Oct 22, 2025', location: 'Oak Avenue residential area', ward: 'Ward 9', phone: '', desc: 'The weekly garbage and recycling collection for all of Oak Avenue was missed this Tuesday...', upvotes: 8, department: 'Sanitation', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 22, 2025 08:00 AM'}] },
+];
+const knowledgeBaseData = [
+{ category: 'General', qa: [{ q: 'How do I check the status of my report?', a: 'You can view all your submitted reports and their current statuses in the "My Reports" section.' }, { q: 'How do I upvote an issue?', a: 'In the "My Reports" view, you can click the upvote button on any existing report to increase its visibility.' }] },
+{ category: 'Technical Issues', qa: [{ q: 'Why can\'t I upload a video?', a: 'Please ensure your video file is in a supported format (e.g., MP4, AVI, MOV) and does not exceed the maximum file size limit of 50MB.' }] }
+];
+
+// --- SVG ICONS FOR DYNAMIC RENDERING ---
+const ICONS = {
+'arrow-up-circle-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M176 240l80-80 80 80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M256 320V160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/></svg>',
+'location-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48c-79.5 0-144 64.5-144 144 0 112 144 272 144 272s144-160 144-272c0-79.5-64.5-144-144-144z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><circle cx="256" cy="192" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>',
+'chevron-down-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 184l144 144 144-144"/></svg>',
+'sparkles-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48C192 48 144 96 144 144s48 96 112 96 112-48 112-96-48-96-112-96zM133.5 294.5a32 32 0 00-22 54.7l50.8 50.8a32 32 0 0054.7-22l-50.8-50.8a32 32 0 00-32.7-22.7zM294.5 133.5a32 32 0 00-22 54.7l50.8 50.8a32 32 0 0054.7-22l-50.8-50.8a32 32 0 00-32.7-22.7zM48 256c0 64 48 112 96 112s96-48 96-112-48-112-96-112-96 48-96 112zM368 256c0 64 48 112 96 112s96-48 96-112-48-112-96-112-96 48-96 112z"/></svg>',
+}
+
+// --- CORE APP ---
+class CivicSuiteApp {
+constructor() {
+this.reportsData = [];
+this.aiTypingTimer = null; // Timer for debouncing AI actions
+this.initDOMReferences();
+this.initEventListeners();
+this._loadData(); // Load from localStorage
+this.renderInitialContent();
+this.showView('dashboardView');
+}
+
+initDOMReferences() {
+this.sidebar = document.getElementById('sidebar');
+this.sidebarNav = document.getElementById('sidebar-nav');
+this.menuToggleButton = document.getElementById('menu-toggle-button');
+this.sidebarOverlay = document.getElementById('sidebar-overlay');
+this.viewTitle = document.getElementById('view-title');
+this.notificationsToggle = document.getElementById('notifications-toggle');
+this.notificationsPanel = document.getElementById('notifications-panel');
+this.notificationDot = document.getElementById('notification-dot');
+this.twoFactorModal = document.getElementById('2fa-modal');
+this.reportDetailsModal = document.getElementById('report-details-modal');
+this.kbSearch = document.getElementById('kb-search');
+this.exportCsvButton = document.getElementById('export-csv-button');
+}
+
+initEventListeners() {
+this.sidebarNav.addEventListener('click', e => {
+const link = e.target.closest('.sidebar-link');
+if (link) { e.preventDefault(); this.showView(link.dataset.view); if (window.innerWidth < 768) this.toggleSidebar(); }
+});
+this.menuToggleButton.addEventListener('click', () => this.toggleSidebar());
+this.sidebarOverlay.addEventListener('click', () => this.toggleSidebar());
+this.notificationsToggle.addEventListener('click', () => this.toggleNotifications());
+document.getElementById('setup-2fa-button').addEventListener('click', () => this.showModal('2fa-modal'));
+document.getElementById('close-2fa-modal').addEventListener('click', () => this.hideModal('2fa-modal'));
+document.getElementById('close-report-modal').addEventListener('click', () => this.hideModal('report-details-modal'));
+this.kbSearch.addEventListener('keyup', e => this.renderKnowledgeBase(e.target.value));
+this.exportCsvButton.addEventListener('click', () => this.exportToCSV());
+}
+
+_loadData() {
+try {
+const storedReports = localStorage.getItem('civicSuiteReports');
+if (storedReports) {
+this.reportsData = JSON.parse(storedReports);
+} else {
+this.reportsData = defaultReportsData;
+this._saveData();
+}
+} catch (error) {
+console.error("Failed to load or parse reports from localStorage:", error);
+this.reportsData = defaultReportsData;
+}
+}
+
+_saveData() {
+try {
+localStorage.setItem('civicSuiteReports', JSON.stringify(this.reportsData));
+} catch (error) {
+console.error("Failed to save reports to localStorage:", error);
+this.showToast('Could not save data. Your browser storage might be full.', 'error');
+}
+}
+
+renderInitialContent() {
+const categorySelect = document.getElementById('issueCategory');
+categorySelect.innerHTML += issueCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+document.getElementById('report-filters').innerHTML += ['All', 'Reported', 'In Progress', 'Resolved'].map(f => `<button data-filter="${f}" class="filter-btn ${f === 'All' ? 'active' : ''}">${f}</button>`).join('');
+}
+
+showView(viewId) {
+document.querySelectorAll('.view-content').forEach(view => {
+view.classList.remove('active', 'animate-fade-in');
+});
+const activeView = document.getElementById(viewId);
+activeView.classList.add('active');
+void activeView.offsetWidth;
+activeView.classList.add('animate-fade-in');
+
+document.querySelectorAll('.sidebar-link').forEach(link => {
+link.classList.remove('active');
+if (link.dataset.view === viewId) {
+link.classList.add('active');
+this.viewTitle.textContent = link.querySelector('span').textContent;
+}
+});
+
+switch(viewId) {
+case 'dashboardView': this.renderDashboard(); break;
+case 'myReportsView': this.setupMyReports(); break;
+case 'newReportView': this.setupNewReportForm(); break;
+case 'mediaUploadView': this.setupMediaUploadForm(); break;
+case 'knowledgeBaseView': this.renderKnowledgeBase(); break;
+}
+}
+
+setupMyReports() {
+this.renderReports('All');
+const filters = document.getElementById('report-filters');
+if (!filters.dataset.listenerAttached) {
+filters.addEventListener('click', e => {
+if (e.target.matches('.filter-btn')) {
+document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+e.target.classList.add('active');
+this.renderReports(e.target.dataset.filter);
+}
+});
+filters.dataset.listenerAttached = 'true';
+}
+}
+
+toggleSidebar() {
+this.sidebar.classList.toggle('open');
+this.sidebarOverlay.classList.toggle('visible');
+}
+toggleNotifications() {
+const panel = this.notificationsPanel;
+if (panel.style.display === 'block') {
+panel.style.display = 'none';
+} else {
+panel.style.display = 'block';
+this.renderNotifications();
+this.notificationDot.style.display = 'none';
+}
+}
+showModal(modalId) { document.getElementById(modalId).classList.add('visible'); }
+hideModal(modalId) { document.getElementById(modalId).classList.remove('visible'); }
+
+showToast(message, type = 'info') {
+const container = document.getElementById('toast-container');
+const toast = document.createElement('div');
+toast.className = `toast toast-${type}`;
+// SECURITY: Use textContent for the message to prevent any script injection.
+toast.textContent = message;
+container.appendChild(toast);
+setTimeout(() => {
+toast.style.opacity = '0';
+setTimeout(() => toast.remove(), 500);
+}, 4000);
+}
+
+renderDashboard() {
+document.getElementById('db-stat-open').textContent = this.reportsData.filter(r => r.status === 'Reported').length;
+document.getElementById('db-stat-progress').textContent = this.reportsData.filter(r => r.status === 'In Progress').length;
+document.getElementById('db-stat-resolved').textContent = this.reportsData.filter(r => r.status === 'Resolved').length;
+document.getElementById('db-stat-urgent').textContent = this.reportsData.filter(r => r.priority === 'High' && r.status !== 'Resolved').length;
+
+const mostUpvotedList = document.getElementById('most-upvoted-list');
+const sortedByUpvotes = [...this.reportsData].sort((a, b) => b.upvotes - a.upvotes).slice(0, 3);
+// SECURITY: Sanitize all dynamic data before rendering to prevent XSS.
+mostUpvotedList.innerHTML = sortedByUpvotes.map(r => `
+<div style="padding:0.75rem; border-radius:0.5rem; display:flex; justify-content:space-between; align-items:center; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+<div><p style="font-weight:600; color:#1f2937; margin:0;">${DOMPurify.sanitize(r.type)} <span style="color:#9ca3af; font-weight:400;">at ${DOMPurify.sanitize(r.location)}</span></p><p style="font-size:0.75rem; color:#6b7280; margin:0;">${DOMPurify.sanitize(r.desc.substring(0, 60))}...</p></div>
+<div style="display:flex; align-items:center; color: var(--p-primary); font-weight:700;">${ICONS['arrow-up-circle-outline']}${r.upvotes}</div>
+</div>`).join('');
+}
+
+renderNotifications() {
+// SECURITY: Sanitize notification text before rendering to prevent stored XSS.
+this.notificationsPanel.innerHTML = `<div style="padding:0.75rem; border-bottom:1px solid #e5e7eb; font-weight:700; color:#374151;">Notifications</div>
+<div style="padding:0.25rem 0;">${userNotifications.map(n => `<a href="#" style="display:block; padding:0.5rem 1rem; font-size:0.875rem; color:#4b5563; text-decoration:none; ${!n.read ? 'font-weight:600;' : ''}" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">${DOMPurify.sanitize(n.text)}<span style="display:block; font-size:0.75rem; color:#9ca3af; font-weight:400;">${DOMPurify.sanitize(n.time)}</span></a>`).join('')}</div>
+<div style="padding:0.5rem; border-top:1px solid #e5e7eb; text-align:center;"><a href="#" style="font-size:0.875rem; color:var(--p-primary); font-weight:600; text-decoration:none;">View All</a></div>`;
+}
+
+renderReports(filter) {
+const container = document.getElementById('reports-list-container');
+const filteredData = filter === 'All' ? this.reportsData : this.reportsData.filter(r => r.status === filter);
+if (filteredData.length === 0) {
+container.innerHTML = `<div class="animate-fade-in" style="text-align:center; background:white; padding:3rem; border-radius:1rem; box-shadow:var(--shadow-lg); border:1px solid #e5e7eb;"><svg class="icon-svg" style="font-size:3.75rem; color:#d1d5db; margin:0 auto;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M432 112H80a48 48 0 00-48 48v192a48 48 0 0048 48h352a48 48 0 0048-48V160a48 48 0 00-48-48z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path d="M112 112V80a32 32 0 0132-32h224a32 32 0 0132 32v32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M448 240H64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><h3 style="margin-top:1rem; font-size:1.25rem; font-weight:700; color:#374151;">No Reports Found</h3></div>`;
+return;
+}
+const statusClass = { Reported: 'tag-status-reported', 'In Progress': 'tag-status-inprogress', Resolved: 'tag-status-resolved' };
+const priorityClass = { Low: 'tag-priority-low', Medium: 'tag-priority-medium', High: 'tag-priority-high' };
+// SECURITY: Sanitize all dynamic data from report objects before rendering.
+container.innerHTML = filteredData.map(r => `
+<div class="report-card animate-fade-in" onclick="app.showReportDetails('${r.id}')">
+    <div class="report-card-main">
+        <div class="report-header">
+            <p class="report-title">${DOMPurify.sanitize(r.type)} <span style="font-size:0.875rem; font-weight:400; color:#9ca3af;">#${DOMPurify.sanitize(r.id)}</span></p>
+            <div class="report-tags">
+                <span class="tag tag-priority ${priorityClass[r.priority]}">${DOMPurify.sanitize(r.priority)}</span>
+                <span class="tag ${statusClass[r.status]}">${DOMPurify.sanitize(r.status)}</span>
+            </div>
+        </div>
+        <p class="report-location">${ICONS['location-outline']}${DOMPurify.sanitize(r.location)} <span style="font-weight:600; color:var(--gray-400); font-size: 0.75rem;">(${DOMPurify.sanitize(r.ward)})</span></p>
+        <p class="report-description">${DOMPurify.sanitize(r.desc.substring(0, 150))}${r.desc.length > 150 ? '...' : ''}</p>
+        <div class="report-footer"><button class="upvote-button">${ICONS['arrow-up-circle-outline']}${r.upvotes} Upvotes</button></div>
+    </div>
+</div>`).join('');
+}
+
+showReportDetails(reportId) {
+const report = this.reportsData.find(r => r.id === reportId);
+if (!report) return;
+
+document.getElementById('modal-report-title').textContent = `Details for Report #${report.id}`;
+const body = document.getElementById('modal-report-body');
+const statusClass = { Reported: 'tag-status-reported', 'In Progress': 'tag-status-inprogress', Resolved: 'tag-status-resolved' };
+const priorityClass = { Low: 'tag-priority-low', Medium: 'tag-priority-medium', High: 'tag-priority-high' };
+
+// SECURITY: Ensure all report data is sanitized before injection.
+body.innerHTML = `
+    <div style="display:flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+        <div><span class="tag ${statusClass[report.status]}">${DOMPurify.sanitize(report.status)}</span></div>
+        <div><span class="tag tag-priority ${priorityClass[report.priority]}">${DOMPurify.sanitize(report.priority)} Priority</span></div>
+    </div>
+    <h4 style="font-weight: 600; color: var(--gray-700);">Issue: ${DOMPurify.sanitize(report.type)}</h4>
+    <p style="color: var(--gray-600);">${DOMPurify.sanitize(report.desc)}</p>
+    <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div><strong>Location:</strong><br>${DOMPurify.sanitize(report.location)}</div>
+        <div><strong>Ward:</strong><br>${DOMPurify.sanitize(report.ward)}</div>
+        <div><strong>Date Reported:</strong><br>${DOMPurify.sanitize(report.date)}</div>
+        <div><strong>Contact Phone:</strong><br>${DOMPurify.sanitize(report.phone) || 'Not Provided'}</div>
+    </div>
+    <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
+    <h5 style="font-weight:600; color:#374151; margin-bottom:1rem;">Audit Log</h5>
+    <div>${report.auditLog.map(log => `<div style="margin-bottom: 0.5rem;"><p style="font-size:0.875rem; color:#1f2937; margin: 0;"><strong>${DOMPurify.sanitize(log.user)}</strong>: ${DOMPurify.sanitize(log.action)}</p><p style="font-size:0.75rem; color:#9ca3af; margin:0;">${DOMPurify.sanitize(log.timestamp)}</p></div>`).join('')}</div>
+`;
+this.showModal('report-details-modal');
+}
+
+setupNewReportForm() {
+const form = document.getElementById('new-report-form');
+const descriptionEl = document.getElementById('issueDescription');
+
+if (!form.dataset.listenerAttached) {
+    form.onsubmit = e => this.handleReportSubmit(e);
+
+    // Automatic category suggestion on typing
+    descriptionEl.addEventListener('input', () => {
+        clearTimeout(this.aiTypingTimer);
+        this.aiTypingTimer = setTimeout(() => this.handleAutoSuggestCategory(), 800);
+    });
+    
+    // Automatic AI enhancement on blur
+    descriptionEl.addEventListener('blur', () => {
+        this.handleAIEnhance();
+    });
+
+    form.dataset.listenerAttached = 'true';
+}
+}
+
+async handleAIEnhance() {
+    const descriptionEl = document.getElementById('issueDescription');
+    const enhancementText = " [AI Enhanced]";
+    if (descriptionEl.value.length < 15 || descriptionEl.value.includes(enhancementText)) {
+        return; // Don't enhance if too short or already enhanced
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate a quick process
+    descriptionEl.value = descriptionEl.value.trim() + enhancementText;
+    this.showToast('Description enhanced by AI!', 'success');
+}
+
+handleAutoSuggestCategory() {
+    const desc = document.getElementById('issueDescription').value.toLowerCase();
+    const categorySelect = document.getElementById('issueCategory');
+    if (desc.length < 10) return;
+
+    // Improved keywords for better, more "fuzzy" matching
+    const keywords = {
+        'Pothole': [/pothole/, /pot hole/, /hole/, /road surface/, /asphalt/, /pavement/, /crack/],
+        'Streetlight Out': [/streetlight/, /street light/, /lamp post/, /light out/, /dark street/, /lamp not working/],
+        'Missed Garbage': [/garbage/, /trash/, /recycling/, /waste/, /missed collection/, /bin not empty/],
+        'Drainage Issue': [/drain/, /clogged/, /flooding/, /gutter/, /standing water/, /culvert/],
+        'Fallen Tree': [/tree/, /fallen/, /branch/, /blocking road/, /wood/],
+        'Vandalism': [/vandalism/, /damaged/, /destroyed/, /defaced/, /smashed/],
+        'Graffiti': [/graffiti/, /spray paint/, /tagged/, /tagging/],
+    };
+
+    let suggestedCategory = 'Other';
+    for (const category in keywords) {
+        if (keywords[category].some(regex => regex.test(desc))) {
+            suggestedCategory = category;
+            break;
+        }
+    }
+    
+    if (categorySelect.value !== suggestedCategory) {
+        categorySelect.value = suggestedCategory;
+        this.showToast(`AI suggested category: ${suggestedCategory}`, 'info');
+    }
+}
+
+
+validateForm(form) {
+let isValid = true;
+document.querySelectorAll('.form-error-message').forEach(el => el.style.display = 'none');
+const requiredFields = form.querySelectorAll('[required]');
+requiredFields.forEach(field => {
+const errorEl = form.querySelector(`.form-error-message[data-for="${field.id}"]`);
+if (!field.value) {
+isValid = false;
+errorEl.textContent = 'This field is required.';
+errorEl.style.display = 'block';
+}
+});
+const phoneField = form.querySelector('#phoneNumber');
+if (phoneField.value && !phoneField.checkValidity()) {
+isValid = false;
+const errorEl = form.querySelector(`.form-error-message[data-for="phoneNumber"]`);
+errorEl.textContent = 'Please enter a valid phone number format.';
+errorEl.style.display = 'block';
+}
+return isValid;
+}
+
+async handleReportSubmit(e) {
+e.preventDefault();
+const form = e.target;
+if (!this.validateForm(form)) {
+this.showToast('Please fix the errors before submitting.', 'error');
+return;
+}
+
+const submitButton = document.getElementById('submit-report-button');
+submitButton.disabled = true;
+submitButton.innerHTML = `<div class="spinner"></div>Submitting...`;
+
+await new Promise(resolve => setTimeout(resolve, 1500));
+
+const report = {
+type: document.getElementById('issueCategory').value,
+location: document.getElementById('issueLocation').value,
+ward: document.getElementById('wardSelection').value,
+phone: document.getElementById('phoneNumber').value,
+desc: document.getElementById('issueDescription').value,
+priority: document.getElementById('priorityLevel').value,
+};
+
+const newId = `CV-${String(Date.now()).slice(-4)}`;
+this.reportsData.unshift({ ...report, id: newId, status: 'Reported', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), upvotes: 0, department: 'Unassigned', auditLog: [{user: 'System', action: 'Created', timestamp: new Date().toLocaleString()}] });
+this._saveData(); // Save to localStorage
+
+this.showToast('Success! Your report has been submitted.', 'success');
+form.reset();
+setTimeout(() => { this.showView('myReportsView'); }, 1000);
+
+submitButton.disabled = false;
+submitButton.innerHTML = `Submit Secure Report <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M336 208v-95a80 80 0 00-160 0v95" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="96" y="208" width="320" height="272" rx="48" ry="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>`;
+}
+
+setupMediaUploadForm() {
+const form = document.getElementById('media-upload-form');
+form.onsubmit = (e) => this.handleMediaUploadSubmit(e);
+const setupPreview = (inputId, previewId, placeholderId) => {
+const input = document.getElementById(inputId);
+const preview = document.getElementById(previewId);
+const placeholder = document.getElementById(placeholderId);
+input.onchange = () => {
+const file = input.files[0];
+if (file) {
+const reader = new FileReader();
+reader.onload = e => {
+preview.src = e.target.result;
+preview.style.display = 'block';
+placeholder.style.display = 'none';
+};
+reader.readAsDataURL(file);
+} else {
+preview.src = '';
+preview.style.display = 'none';
+placeholder.style.display = 'block';
+}
+};
+};
+setupPreview('mediaPhoto', 'photo-preview', 'photo-placeholder');
+setupPreview('mediaVideo', 'video-preview', 'video-placeholder');
+}
+
+async handleMediaUploadSubmit(e) {
+e.preventDefault();
+const submitButton = document.getElementById('submit-media-button');
+submitButton.disabled = true;
+submitButton.innerHTML = `<div class="spinner"></div>Uploading...`;
+
+await new Promise(resolve => setTimeout(resolve, 2000));
+
+this.showToast('Success! Your media has been uploaded.', 'success');
+document.getElementById('media-upload-form').reset();
+['photo', 'video'].forEach(type => {
+document.getElementById(`${type}-preview`).style.display = 'none';
+document.getElementById(`${type}-placeholder`).style.display = 'block';
+});
+
+submitButton.disabled = false;
+submitButton.innerHTML = 'Upload Media';
+}
+
+renderKnowledgeBase(searchTerm = '') {
+const container = document.getElementById('knowledge-base-container');
+const lowerSearchTerm = searchTerm.toLowerCase();
+const filteredData = knowledgeBaseData.map(cat => ({
+category: cat.category,
+qa: cat.qa.filter(item => item.q.toLowerCase().includes(lowerSearchTerm) || item.a.toLowerCase().includes(lowerSearchTerm))
+})).filter(cat => cat.qa.length > 0);
+// SECURITY: Sanitize all knowledge base content before rendering.
+container.innerHTML = filteredData.map(cat => `
+<div class="dashboard-list-card animate-fade-in"><h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin-bottom: 1rem;">${DOMPurify.sanitize(cat.category)}</h3><div>
+${cat.qa.map(item => `<div style="border-bottom: 1px solid var(--gray-200);"><div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; cursor: pointer;" onclick="app.toggleAccordion(this)"><h4 style="font-weight: 600; color: var(--gray-700); margin:0;">${DOMPurify.sanitize(item.q)}</h4><span class="accordion-icon" style="transition: transform 0.3s;">${ICONS['chevron-down-outline']}</span></div><div class="accordion-content" style="max-height:0; overflow:hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out;"><p style="padding: 0 0.75rem 1rem 0.75rem; color: var(--gray-600); margin:0;">${DOMPurify.sanitize(item.a)}</p></div></div>`).join('')}
+</div></div>`).join('');
+}
+
+toggleAccordion(element) {
+const content = element.nextElementSibling;
+const icon = element.querySelector('.accordion-icon');
+if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+content.style.maxHeight = content.scrollHeight + 'px';
+icon.style.transform = 'rotate(180deg)';
+} else {
+content.style.maxHeight = '0px';
+icon.style.transform = 'rotate(0deg)';
+}
+}
+
+exportToCSV() {
+const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+const dataToExport = activeFilter === 'All' ? this.reportsData : this.reportsData.filter(c => c.status === activeFilter);
+if (dataToExport.length === 0) { this.showToast('No data to export!', 'error'); return; }
+const headers = ['id', 'type', 'status', 'priority', 'date', 'location', 'ward', 'desc', 'upvotes'];
+let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
+csvContent += dataToExport.map(row => headers.map(header => `"${(row[header] || '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+const encodedUri = encodeURI(csvContent);
+const link = document.createElement("a");
+link.setAttribute("href", encodedUri);
+link.setAttribute("download", "civicsuite_reports_export.csv");
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+this.showToast('Report data exported successfully.', 'success');
+}
+}
+
+// Ensures the app class is globally accessible for inline onclick events
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+app = new CivicSuiteApp();
+});
+</script>
+
+</body>
+</html>
