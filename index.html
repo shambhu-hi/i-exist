@@ -1050,475 +1050,498 @@ body {
 
 
 <!-- Main Application Script -->
+<!-- Main Application Script -->
 <script>
 // --- DATA SIMULATION & CONFIGURATION ---
 const issueCategories = ['Pothole', 'Streetlight Out', 'Missed Garbage', 'Drainage Issue', 'Vandalism', 'Traffic Signal', 'Broken Sidewalk', 'Fallen Tree', 'Noise Complaint', 'Abandoned Vehicle', 'Graffiti', 'Illegal Dumping', 'Park Maintenance', 'Water Leak', 'Sewer Backup', 'Rodent Complaint', 'Zoning Violation', 'Damaged Public Property', 'Unsafe Building', 'Overgrown Vegetation', 'Missing Street Sign', 'Other'];
 const userNotifications = [
-{ read: false, text: "Status for <strong>CV-003</strong> was updated to <strong>In Progress</strong>.", time: "15m ago" },
-{ read: false, text: "Your report <strong>CV-002</strong> was successfully resolved.", time: "1h ago" },
-{ read: true, text: "Welcome to the new CivicSuite platform!", time: "1d ago" }
+    { read: false, text: "Status for <strong>CV-003</strong> was updated to <strong>In Progress</strong>.", time: "15m ago" },
+    { read: false, text: "Your report <strong>CV-002</strong> was successfully resolved.", time: "1h ago" },
+    { read: true, text: "Welcome to the new CivicSuite platform!", time: "1d ago" }
 ];
-// Default data if localStorage is empty
 const defaultReportsData = [
-{ id: 'CV-003', type: 'Drainage Issue', status: 'In Progress', priority: 'High', date: 'Oct 26, 2025', location: 'Elm Street, near the park', ward: 'Ward 3', phone: '', desc: 'The storm drain at the corner of Elm Street and Park Avenue is completely clogged with leaves and debris...', upvotes: 15, department: 'Public Works', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 26, 2025 09:00 AM'}, {user: 'Alice', action: 'Status changed to In Progress', timestamp: 'Oct 27, 2025 10:15 AM'}] },
-{ id: 'CV-002', type: 'Pothole', status: 'Resolved', priority: 'Medium', date: 'Oct 24, 2025', location: '123 Main St', ward: 'Ward 1', phone: '(555) 867-5309', desc: 'A large and dangerous pothole has formed in the westbound lane of Main Street...', upvotes: 28, department: 'Public Works', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 24, 2025 11:30 AM'}, {user: 'Alice', action: 'Status changed to Resolved', timestamp: 'Oct 25, 2025 02:00 PM'}] },
-{ id: 'CV-001', type: 'Missed Garbage', status: 'Reported', priority: 'Low', date: 'Oct 22, 2025', location: 'Oak Avenue residential area', ward: 'Ward 9', phone: '', desc: 'The weekly garbage and recycling collection for all of Oak Avenue was missed this Tuesday...', upvotes: 8, department: 'Sanitation', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 22, 2025 08:00 AM'}] },
+    { id: 'CV-003', type: 'Drainage Issue', status: 'In Progress', priority: 'High', date: 'Oct 26, 2025', location: 'Elm Street, near the park', ward: 'Ward 3', phone: '', desc: 'The storm drain at the corner of Elm Street and Park Avenue is completely clogged with leaves and debris...', upvotes: 15, department: 'Public Works', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 26, 2025 09:00 AM'}, {user: 'Alice', action: 'Status changed to In Progress', timestamp: 'Oct 27, 2025 10:15 AM'}] },
+    { id: 'CV-002', type: 'Pothole', status: 'Resolved', priority: 'Medium', date: 'Oct 24, 2025', location: '123 Main St', ward: 'Ward 1', phone: '(555) 867-5309', desc: 'A large and dangerous pothole has formed in the westbound lane of Main Street...', upvotes: 28, department: 'Public Works', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 24, 2025 11:30 AM'}, {user: 'Alice', action: 'Status changed to Resolved', timestamp: 'Oct 25, 2025 02:00 PM'}] },
+    { id: 'CV-001', type: 'Missed Garbage', status: 'Reported', priority: 'Low', date: 'Oct 22, 2025', location: 'Oak Avenue residential area', ward: 'Ward 9', phone: '', desc: 'The weekly garbage and recycling collection for all of Oak Avenue was missed this Tuesday...', upvotes: 8, department: 'Sanitation', auditLog: [{user: 'System', action: 'Created', timestamp: 'Oct 22, 2025 08:00 AM'}] },
 ];
 const knowledgeBaseData = [
-{ category: 'General', qa: [{ q: 'How do I check the status of my report?', a: 'You can view all your submitted reports and their current statuses in the "My Reports" section.' }, { q: 'How do I upvote an issue?', a: 'In the "My Reports" view, you can click the upvote button on any existing report to increase its visibility.' }] },
-{ category: 'Technical Issues', qa: [{ q: 'Why can\'t I upload a video?', a: 'Please ensure your video file is in a supported format (e.g., MP4, AVI, MOV) and does not exceed the maximum file size limit of 50MB.' }] }
+    { category: 'General', qa: [{ q: 'How do I check the status of my report?', a: 'You can view all your submitted reports and their current statuses in the "My Reports" section.' }, { q: 'How do I upvote an issue?', a: 'In the "My Reports" view, you can click the upvote button on any existing report to increase its visibility.' }] },
+    { category: 'Technical Issues', qa: [{ q: 'Why can\'t I upload a video?', a: 'Please ensure your video file is in a supported format (e.g., MP4, AVI, MOV) and does not exceed the maximum file size limit of 50MB.' }] }
 ];
 
 // --- SVG ICONS FOR DYNAMIC RENDERING ---
 const ICONS = {
-'arrow-up-circle-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M176 240l80-80 80 80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M256 320V160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/></svg>',
-'location-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48c-79.5 0-144 64.5-144 144 0 112 144 272 144 272s144-160 144-272c0-79.5-64.5-144-144-144z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><circle cx="256" cy="192" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>',
-'chevron-down-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 184l144 144 144-144"/></svg>',
-'sparkles-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48C192 48 144 96 144 144s48 96 112 96 112-48 112-96-48-96-112-96zM133.5 294.5a32 32 0 00-22 54.7l50.8 50.8a32 32 0 0054.7-22l-50.8-50.8a32 32 0 00-32.7-22.7zM294.5 133.5a32 32 0 00-22 54.7l50.8 50.8a32 32 0 0054.7-22l-50.8-50.8a32 32 0 00-32.7-22.7zM48 256c0 64 48 112 96 112s96-48 96-112-48-112-96-112-96 48-96 112zM368 256c0 64 48 112 96 112s96-48 96-112-48-112-96-112-96 48-96 112z"/></svg>',
+    'arrow-up-circle-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M176 240l80-80 80 80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M256 320V160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/></svg>',
+    'location-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48c-79.5 0-144 64.5-144 144 0 112 144 272 144 272s144-160 144-272c0-79.5-64.5-144-144-144z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><circle cx="256" cy="192" r="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>',
+    'chevron-down-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="48" d="M112 184l144 144 144-144"/></svg>',
+    'sparkles-outline': '<svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 48C192 48 144 96 144 144s48 96 112 96 112-48 112-96-48-96-112-96zM133.5 294.5a32 32 0 00-22 54.7l50.8 50.8a32 32 0 0054.7-22l-50.8-50.8a32 32 0 00-32.7-22.7zM294.5 133.5a32 32 0 00-22 54.7l50.8 50.8a32 32 0 0054.7-22l-50.8-50.8a32 32 0 00-32.7-22.7zM48 256c0 64 48 112 96 112s96-48 96-112-48-112-96-112-96 48-96 112zM368 256c0 64 48 112 96 112s96-48 96-112-48-112-96-112-96 48-96 112z"/></svg>',
 }
 
 // --- CORE APP ---
 class CivicSuiteApp {
-constructor() {
-this.reportsData = [];
-this.aiTypingTimer = null; // Timer for debouncing AI actions
-this.initDOMReferences();
-this.initEventListeners();
-this._loadData(); // Load from localStorage
-this.renderInitialContent();
-this.showView('dashboardView');
-}
-
-initDOMReferences() {
-this.sidebar = document.getElementById('sidebar');
-this.sidebarNav = document.getElementById('sidebar-nav');
-this.menuToggleButton = document.getElementById('menu-toggle-button');
-this.sidebarOverlay = document.getElementById('sidebar-overlay');
-this.viewTitle = document.getElementById('view-title');
-this.notificationsToggle = document.getElementById('notifications-toggle');
-this.notificationsPanel = document.getElementById('notifications-panel');
-this.notificationDot = document.getElementById('notification-dot');
-this.twoFactorModal = document.getElementById('2fa-modal');
-this.reportDetailsModal = document.getElementById('report-details-modal');
-this.kbSearch = document.getElementById('kb-search');
-this.exportCsvButton = document.getElementById('export-csv-button');
-}
-
-initEventListeners() {
-this.sidebarNav.addEventListener('click', e => {
-const link = e.target.closest('.sidebar-link');
-if (link) { e.preventDefault(); this.showView(link.dataset.view); if (window.innerWidth < 768) this.toggleSidebar(); }
-});
-this.menuToggleButton.addEventListener('click', () => this.toggleSidebar());
-this.sidebarOverlay.addEventListener('click', () => this.toggleSidebar());
-this.notificationsToggle.addEventListener('click', () => this.toggleNotifications());
-document.getElementById('setup-2fa-button').addEventListener('click', () => this.showModal('2fa-modal'));
-document.getElementById('close-2fa-modal').addEventListener('click', () => this.hideModal('2fa-modal'));
-document.getElementById('close-report-modal').addEventListener('click', () => this.hideModal('report-details-modal'));
-this.kbSearch.addEventListener('keyup', e => this.renderKnowledgeBase(e.target.value));
-this.exportCsvButton.addEventListener('click', () => this.exportToCSV());
-}
-
-_loadData() {
-try {
-const storedReports = localStorage.getItem('civicSuiteReports');
-if (storedReports) {
-this.reportsData = JSON.parse(storedReports);
-} else {
-this.reportsData = defaultReportsData;
-this._saveData();
-}
-} catch (error) {
-console.error("Failed to load or parse reports from localStorage:", error);
-this.reportsData = defaultReportsData;
-}
-}
-
-_saveData() {
-try {
-localStorage.setItem('civicSuiteReports', JSON.stringify(this.reportsData));
-} catch (error) {
-console.error("Failed to save reports to localStorage:", error);
-this.showToast('Could not save data. Your browser storage might be full.', 'error');
-}
-}
-
-renderInitialContent() {
-const categorySelect = document.getElementById('issueCategory');
-categorySelect.innerHTML += issueCategories.map(c => `<option value="${c}">${c}</option>`).join('');
-
-document.getElementById('report-filters').innerHTML += ['All', 'Reported', 'In Progress', 'Resolved'].map(f => `<button data-filter="${f}" class="filter-btn ${f === 'All' ? 'active' : ''}">${f}</button>`).join('');
-}
-
-showView(viewId) {
-document.querySelectorAll('.view-content').forEach(view => {
-view.classList.remove('active', 'animate-fade-in');
-});
-const activeView = document.getElementById(viewId);
-activeView.classList.add('active');
-void activeView.offsetWidth;
-activeView.classList.add('animate-fade-in');
-
-document.querySelectorAll('.sidebar-link').forEach(link => {
-link.classList.remove('active');
-if (link.dataset.view === viewId) {
-link.classList.add('active');
-this.viewTitle.textContent = link.querySelector('span').textContent;
-}
-});
-
-switch(viewId) {
-case 'dashboardView': this.renderDashboard(); break;
-case 'myReportsView': this.setupMyReports(); break;
-case 'newReportView': this.setupNewReportForm(); break;
-case 'mediaUploadView': this.setupMediaUploadForm(); break;
-case 'knowledgeBaseView': this.renderKnowledgeBase(); break;
-}
-}
-
-setupMyReports() {
-this.renderReports('All');
-const filters = document.getElementById('report-filters');
-if (!filters.dataset.listenerAttached) {
-filters.addEventListener('click', e => {
-if (e.target.matches('.filter-btn')) {
-document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-e.target.classList.add('active');
-this.renderReports(e.target.dataset.filter);
-}
-});
-filters.dataset.listenerAttached = 'true';
-}
-}
-
-toggleSidebar() {
-this.sidebar.classList.toggle('open');
-this.sidebarOverlay.classList.toggle('visible');
-}
-toggleNotifications() {
-const panel = this.notificationsPanel;
-if (panel.style.display === 'block') {
-panel.style.display = 'none';
-} else {
-panel.style.display = 'block';
-this.renderNotifications();
-this.notificationDot.style.display = 'none';
-}
-}
-showModal(modalId) { document.getElementById(modalId).classList.add('visible'); }
-hideModal(modalId) { document.getElementById(modalId).classList.remove('visible'); }
-
-showToast(message, type = 'info') {
-const container = document.getElementById('toast-container');
-const toast = document.createElement('div');
-toast.className = `toast toast-${type}`;
-// SECURITY: Use textContent for the message to prevent any script injection.
-toast.textContent = message;
-container.appendChild(toast);
-setTimeout(() => {
-toast.style.opacity = '0';
-setTimeout(() => toast.remove(), 500);
-}, 4000);
-}
-
-renderDashboard() {
-document.getElementById('db-stat-open').textContent = this.reportsData.filter(r => r.status === 'Reported').length;
-document.getElementById('db-stat-progress').textContent = this.reportsData.filter(r => r.status === 'In Progress').length;
-document.getElementById('db-stat-resolved').textContent = this.reportsData.filter(r => r.status === 'Resolved').length;
-document.getElementById('db-stat-urgent').textContent = this.reportsData.filter(r => r.priority === 'High' && r.status !== 'Resolved').length;
-
-const mostUpvotedList = document.getElementById('most-upvoted-list');
-const sortedByUpvotes = [...this.reportsData].sort((a, b) => b.upvotes - a.upvotes).slice(0, 3);
-// SECURITY: Sanitize all dynamic data before rendering to prevent XSS.
-mostUpvotedList.innerHTML = sortedByUpvotes.map(r => `
-<div style="padding:0.75rem; border-radius:0.5rem; display:flex; justify-content:space-between; align-items:center; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-<div><p style="font-weight:600; color:#1f2937; margin:0;">${DOMPurify.sanitize(r.type)} <span style="color:#9ca3af; font-weight:400;">at ${DOMPurify.sanitize(r.location)}</span></p><p style="font-size:0.75rem; color:#6b7280; margin:0;">${DOMPurify.sanitize(r.desc.substring(0, 60))}...</p></div>
-<div style="display:flex; align-items:center; color: var(--p-primary); font-weight:700;">${ICONS['arrow-up-circle-outline']}${r.upvotes}</div>
-</div>`).join('');
-}
-
-renderNotifications() {
-// SECURITY: Sanitize notification text before rendering to prevent stored XSS.
-this.notificationsPanel.innerHTML = `<div style="padding:0.75rem; border-bottom:1px solid #e5e7eb; font-weight:700; color:#374151;">Notifications</div>
-<div style="padding:0.25rem 0;">${userNotifications.map(n => `<a href="#" style="display:block; padding:0.5rem 1rem; font-size:0.875rem; color:#4b5563; text-decoration:none; ${!n.read ? 'font-weight:600;' : ''}" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">${DOMPurify.sanitize(n.text)}<span style="display:block; font-size:0.75rem; color:#9ca3af; font-weight:400;">${DOMPurify.sanitize(n.time)}</span></a>`).join('')}</div>
-<div style="padding:0.5rem; border-top:1px solid #e5e7eb; text-align:center;"><a href="#" style="font-size:0.875rem; color:var(--p-primary); font-weight:600; text-decoration:none;">View All</a></div>`;
-}
-
-renderReports(filter) {
-const container = document.getElementById('reports-list-container');
-const filteredData = filter === 'All' ? this.reportsData : this.reportsData.filter(r => r.status === filter);
-if (filteredData.length === 0) {
-container.innerHTML = `<div class="animate-fade-in" style="text-align:center; background:white; padding:3rem; border-radius:1rem; box-shadow:var(--shadow-lg); border:1px solid #e5e7eb;"><svg class="icon-svg" style="font-size:3.75rem; color:#d1d5db; margin:0 auto;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M432 112H80a48 48 0 00-48 48v192a48 48 0 0048 48h352a48 48 0 0048-48V160a48 48 0 00-48-48z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path d="M112 112V80a32 32 0 0132-32h224a32 32 0 0132 32v32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M448 240H64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><h3 style="margin-top:1rem; font-size:1.25rem; font-weight:700; color:#374151;">No Reports Found</h3></div>`;
-return;
-}
-const statusClass = { Reported: 'tag-status-reported', 'In Progress': 'tag-status-inprogress', Resolved: 'tag-status-resolved' };
-const priorityClass = { Low: 'tag-priority-low', Medium: 'tag-priority-medium', High: 'tag-priority-high' };
-// SECURITY: Sanitize all dynamic data from report objects before rendering.
-container.innerHTML = filteredData.map(r => `
-<div class="report-card animate-fade-in" onclick="app.showReportDetails('${r.id}')">
-    <div class="report-card-main">
-        <div class="report-header">
-            <p class="report-title">${DOMPurify.sanitize(r.type)} <span style="font-size:0.875rem; font-weight:400; color:#9ca3af;">#${DOMPurify.sanitize(r.id)}</span></p>
-            <div class="report-tags">
-                <span class="tag tag-priority ${priorityClass[r.priority]}">${DOMPurify.sanitize(r.priority)}</span>
-                <span class="tag ${statusClass[r.status]}">${DOMPurify.sanitize(r.status)}</span>
-            </div>
-        </div>
-        <p class="report-location">${ICONS['location-outline']}${DOMPurify.sanitize(r.location)} <span style="font-weight:600; color:var(--gray-400); font-size: 0.75rem;">(${DOMPurify.sanitize(r.ward)})</span></p>
-        <p class="report-description">${DOMPurify.sanitize(r.desc.substring(0, 150))}${r.desc.length > 150 ? '...' : ''}</p>
-        <div class="report-footer"><button class="upvote-button">${ICONS['arrow-up-circle-outline']}${r.upvotes} Upvotes</button></div>
-    </div>
-</div>`).join('');
-}
-
-showReportDetails(reportId) {
-const report = this.reportsData.find(r => r.id === reportId);
-if (!report) return;
-
-document.getElementById('modal-report-title').textContent = `Details for Report #${report.id}`;
-const body = document.getElementById('modal-report-body');
-const statusClass = { Reported: 'tag-status-reported', 'In Progress': 'tag-status-inprogress', Resolved: 'tag-status-resolved' };
-const priorityClass = { Low: 'tag-priority-low', Medium: 'tag-priority-medium', High: 'tag-priority-high' };
-
-// SECURITY: Ensure all report data is sanitized before injection.
-body.innerHTML = `
-    <div style="display:flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
-        <div><span class="tag ${statusClass[report.status]}">${DOMPurify.sanitize(report.status)}</span></div>
-        <div><span class="tag tag-priority ${priorityClass[report.priority]}">${DOMPurify.sanitize(report.priority)} Priority</span></div>
-    </div>
-    <h4 style="font-weight: 600; color: var(--gray-700);">Issue: ${DOMPurify.sanitize(report.type)}</h4>
-    <p style="color: var(--gray-600);">${DOMPurify.sanitize(report.desc)}</p>
-    <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        <div><strong>Location:</strong><br>${DOMPurify.sanitize(report.location)}</div>
-        <div><strong>Ward:</strong><br>${DOMPurify.sanitize(report.ward)}</div>
-        <div><strong>Date Reported:</strong><br>${DOMPurify.sanitize(report.date)}</div>
-        <div><strong>Contact Phone:</strong><br>${DOMPurify.sanitize(report.phone) || 'Not Provided'}</div>
-    </div>
-    <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
-    <h5 style="font-weight:600; color:#374151; margin-bottom:1rem;">Audit Log</h5>
-    <div>${report.auditLog.map(log => `<div style="margin-bottom: 0.5rem;"><p style="font-size:0.875rem; color:#1f2937; margin: 0;"><strong>${DOMPurify.sanitize(log.user)}</strong>: ${DOMPurify.sanitize(log.action)}</p><p style="font-size:0.75rem; color:#9ca3af; margin:0;">${DOMPurify.sanitize(log.timestamp)}</p></div>`).join('')}</div>
-`;
-this.showModal('report-details-modal');
-}
-
-setupNewReportForm() {
-const form = document.getElementById('new-report-form');
-const descriptionEl = document.getElementById('issueDescription');
-
-if (!form.dataset.listenerAttached) {
-    form.onsubmit = e => this.handleReportSubmit(e);
-
-    // Automatic category suggestion on typing
-    descriptionEl.addEventListener('input', () => {
-        clearTimeout(this.aiTypingTimer);
-        this.aiTypingTimer = setTimeout(() => this.handleAutoSuggestCategory(), 800);
-    });
-    
-    // Automatic AI enhancement on blur
-    descriptionEl.addEventListener('blur', () => {
-        this.handleAIEnhance();
-    });
-
-    form.dataset.listenerAttached = 'true';
-}
-}
-
-async handleAIEnhance() {
-    const descriptionEl = document.getElementById('issueDescription');
-    const enhancementText = " [AI Enhanced]";
-    if (descriptionEl.value.length < 15 || descriptionEl.value.includes(enhancementText)) {
-        return; // Don't enhance if too short or already enhanced
+    constructor() {
+        this.reportsData = [];
+        this.aiTypingTimer = null;
+        this.initDOMReferences();
+        this.initEventListeners();
+        this._loadData();
+        this.renderInitialContent();
+        this.showView('dashboardView');
     }
-    
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate a quick process
-    descriptionEl.value = descriptionEl.value.trim() + enhancementText;
-    this.showToast('Description enhanced by AI!', 'success');
-}
 
-handleAutoSuggestCategory() {
-    const desc = document.getElementById('issueDescription').value.toLowerCase();
-    const categorySelect = document.getElementById('issueCategory');
-    if (desc.length < 10) return;
+    initDOMReferences() {
+        this.sidebar = document.getElementById('sidebar');
+        this.sidebarNav = document.getElementById('sidebar-nav');
+        this.menuToggleButton = document.getElementById('menu-toggle-button');
+        this.sidebarOverlay = document.getElementById('sidebar-overlay');
+        this.viewTitle = document.getElementById('view-title');
+        this.notificationsToggle = document.getElementById('notifications-toggle');
+        this.notificationsPanel = document.getElementById('notifications-panel');
+        this.notificationDot = document.getElementById('notification-dot');
+        this.twoFactorModal = document.getElementById('2fa-modal');
+        this.reportDetailsModal = document.getElementById('report-details-modal');
+        this.kbSearch = document.getElementById('kb-search');
+        this.exportCsvButton = document.getElementById('export-csv-button');
+    }
 
-    // Improved keywords for better, more "fuzzy" matching
-    const keywords = {
-        'Pothole': [/pothole/, /pot hole/, /hole/, /road surface/, /asphalt/, /pavement/, /crack/],
-        'Streetlight Out': [/streetlight/, /street light/, /lamp post/, /light out/, /dark street/, /lamp not working/],
-        'Missed Garbage': [/garbage/, /trash/, /recycling/, /waste/, /missed collection/, /bin not empty/],
-        'Drainage Issue': [/drain/, /clogged/, /flooding/, /gutter/, /standing water/, /culvert/],
-        'Fallen Tree': [/tree/, /fallen/, /branch/, /blocking road/, /wood/],
-        'Vandalism': [/vandalism/, /damaged/, /destroyed/, /defaced/, /smashed/],
-        'Graffiti': [/graffiti/, /spray paint/, /tagged/, /tagging/],
-    };
+    initEventListeners() {
+        this.sidebarNav.addEventListener('click', e => {
+            const link = e.target.closest('.sidebar-link');
+            if (link) { e.preventDefault(); this.showView(link.dataset.view); if (window.innerWidth < 768) this.toggleSidebar(); }
+        });
+        this.menuToggleButton.addEventListener('click', () => this.toggleSidebar());
+        this.sidebarOverlay.addEventListener('click', () => this.toggleSidebar());
+        this.notificationsToggle.addEventListener('click', () => this.toggleNotifications());
+        document.getElementById('setup-2fa-button').addEventListener('click', () => this.showModal('2fa-modal'));
+        document.getElementById('close-2fa-modal').addEventListener('click', () => this.hideModal('2fa-modal'));
+        document.getElementById('close-report-modal').addEventListener('click', () => this.hideModal('report-details-modal'));
+        this.kbSearch.addEventListener('keyup', e => this.renderKnowledgeBase(e.target.value));
+        this.exportCsvButton.addEventListener('click', () => this.exportToCSV());
+    }
 
-    let suggestedCategory = 'Other';
-    for (const category in keywords) {
-        if (keywords[category].some(regex => regex.test(desc))) {
-            suggestedCategory = category;
-            break;
+    _loadData() {
+        try {
+            const storedReports = localStorage.getItem('civicSuiteReports');
+            if (storedReports) {
+                this.reportsData = JSON.parse(storedReports);
+            } else {
+                this.reportsData = defaultReportsData;
+                this._saveData();
+            }
+        } catch (error) {
+            console.error("Failed to load or parse reports from localStorage:", error);
+            this.reportsData = defaultReportsData;
         }
     }
-    
-    if (categorySelect.value !== suggestedCategory) {
-        categorySelect.value = suggestedCategory;
-        this.showToast(`AI suggested category: ${suggestedCategory}`, 'info');
+
+    _saveData() {
+        try {
+            localStorage.setItem('civicSuiteReports', JSON.stringify(this.reportsData));
+        } catch (error) {
+            console.error("Failed to save reports to localStorage:", error);
+            this.showToast('Could not save data. Your browser storage might be full.', 'error');
+        }
     }
-}
+
+    renderInitialContent() {
+        const categorySelect = document.getElementById('issueCategory');
+        categorySelect.innerHTML += issueCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        document.getElementById('report-filters').innerHTML += ['All', 'Reported', 'In Progress', 'Resolved'].map(f => `<button data-filter="${f}" class="filter-btn ${f === 'All' ? 'active' : ''}">${f}</button>`).join('');
+    }
+
+    showView(viewId) {
+        document.querySelectorAll('.view-content').forEach(view => {
+            view.classList.remove('active', 'animate-fade-in');
+        });
+        const activeView = document.getElementById(viewId);
+        activeView.classList.add('active');
+        void activeView.offsetWidth;
+        activeView.classList.add('animate-fade-in');
+
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.view === viewId) {
+                link.classList.add('active');
+                this.viewTitle.textContent = link.querySelector('span').textContent;
+            }
+        });
+
+        switch (viewId) {
+            case 'dashboardView': this.renderDashboard(); break;
+            case 'myReportsView': this.setupMyReports(); break;
+            case 'newReportView': this.setupNewReportForm(); break;
+            case 'mediaUploadView': this.setupMediaUploadForm(); break;
+            case 'knowledgeBaseView': this.renderKnowledgeBase(); break;
+        }
+    }
+
+    setupMyReports() {
+        this.renderReports('All');
+        const filters = document.getElementById('report-filters');
+        if (!filters.dataset.listenerAttached) {
+            filters.addEventListener('click', e => {
+                if (e.target.matches('.filter-btn')) {
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    this.renderReports(e.target.dataset.filter);
+                }
+            });
+            filters.dataset.listenerAttached = 'true';
+        }
+    }
+
+    toggleSidebar() {
+        this.sidebar.classList.toggle('open');
+        this.sidebarOverlay.classList.toggle('visible');
+    }
+    toggleNotifications() {
+        const panel = this.notificationsPanel;
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+        } else {
+            panel.style.display = 'block';
+            this.renderNotifications();
+            this.notificationDot.style.display = 'none';
+        }
+    }
+    showModal(modalId) { document.getElementById(modalId).classList.add('visible'); }
+    hideModal(modalId) { document.getElementById(modalId).classList.remove('visible'); }
+
+    showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }, 4000);
+    }
+
+    renderDashboard() {
+        document.getElementById('db-stat-open').textContent = this.reportsData.filter(r => r.status === 'Reported').length;
+        document.getElementById('db-stat-progress').textContent = this.reportsData.filter(r => r.status === 'In Progress').length;
+        document.getElementById('db-stat-resolved').textContent = this.reportsData.filter(r => r.status === 'Resolved').length;
+        document.getElementById('db-stat-urgent').textContent = this.reportsData.filter(r => r.priority === 'High' && r.status !== 'Resolved').length;
+
+        const mostUpvotedList = document.getElementById('most-upvoted-list');
+        const sortedByUpvotes = [...this.reportsData].sort((a, b) => b.upvotes - a.upvotes).slice(0, 3);
+        mostUpvotedList.innerHTML = sortedByUpvotes.map(r => `
+            <div style="padding:0.75rem; border-radius:0.5rem; display:flex; justify-content:space-between; align-items:center; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
+                <div><p style="font-weight:600; color:#1f2937; margin:0;">${DOMPurify.sanitize(r.type)} <span style="color:#9ca3af; font-weight:400;">at ${DOMPurify.sanitize(r.location)}</span></p><p style="font-size:0.75rem; color:#6b7280; margin:0;">${DOMPurify.sanitize(r.desc.substring(0, 60))}...</p></div>
+                <div style="display:flex; align-items:center; color: var(--p-primary); font-weight:700;">${ICONS['arrow-up-circle-outline']}${r.upvotes}</div>
+            </div>`).join('');
+    }
+
+    renderNotifications() {
+        this.notificationsPanel.innerHTML = `<div style="padding:0.75rem; border-bottom:1px solid #e5e7eb; font-weight:700; color:#374151;">Notifications</div>
+            <div style="padding:0.25rem 0;">${userNotifications.map(n => `<a href="#" style="display:block; padding:0.5rem 1rem; font-size:0.875rem; color:#4b5563; text-decoration:none; ${!n.read ? 'font-weight:600;' : ''}" onmouseover="this.style.backgroundColor='#f3f4f6'" onmouseout="this.style.backgroundColor='transparent'">${DOMPurify.sanitize(n.text)}<span style="display:block; font-size:0.75rem; color:#9ca3af; font-weight:400;">${DOMPurify.sanitize(n.time)}</span></a>`).join('')}</div>
+            <div style="padding:0.5rem; border-top:1px solid #e5e7eb; text-align:center;"><a href="#" style="font-size:0.875rem; color:var(--p-primary); font-weight:600; text-decoration:none;">View All</a></div>`;
+    }
+
+    renderReports(filter) {
+        const container = document.getElementById('reports-list-container');
+        const filteredData = filter === 'All' ? this.reportsData : this.reportsData.filter(r => r.status === filter);
+        if (filteredData.length === 0) {
+            container.innerHTML = `<div class="animate-fade-in" style="text-align:center; background:white; padding:3rem; border-radius:1rem; box-shadow:var(--shadow-lg); border:1px solid #e5e7eb;"><svg class="icon-svg" style="font-size:3.75rem; color:#d1d5db; margin:0 auto;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M432 112H80a48 48 0 00-48 48v192a48 48 0 0048 48h352a48 48 0 0048-48V160a48 48 0 00-48-48z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="32"/><path d="M112 112V80a32 32 0 0132-32h224a32 32 0 0132 32v32" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path d="M448 240H64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><h3 style="margin-top:1rem; font-size:1.25rem; font-weight:700; color:#374151;">No Reports Found</h3></div>`;
+            return;
+        }
+        const statusClass = { Reported: 'tag-status-reported', 'In Progress': 'tag-status-inprogress', Resolved: 'tag-status-resolved' };
+        const priorityClass = { Low: 'tag-priority-low', Medium: 'tag-priority-medium', High: 'tag-priority-high' };
+        container.innerHTML = filteredData.map(r => `
+            <div class="report-card animate-fade-in" onclick="app.showReportDetails('${r.id}')">
+                <div class="report-card-main">
+                    <div class="report-header">
+                        <p class="report-title">${DOMPurify.sanitize(r.type)} <span style="font-size:0.875rem; font-weight:400; color:#9ca3af;">#${DOMPurify.sanitize(r.id)}</span></p>
+                        <div class="report-tags">
+                            <span class="tag tag-priority ${priorityClass[r.priority]}">${DOMPurify.sanitize(r.priority)}</span>
+                            <span class="tag ${statusClass[r.status]}">${DOMPurify.sanitize(r.status)}</span>
+                        </div>
+                    </div>
+                    <p class="report-location">${ICONS['location-outline']}${DOMPurify.sanitize(r.location)} <span style="font-weight:600; color:var(--gray-400); font-size: 0.75rem;">(${DOMPurify.sanitize(r.ward)})</span></p>
+                    <p class="report-description">${DOMPurify.sanitize(r.desc.substring(0, 150))}${r.desc.length > 150 ? '...' : ''}</p>
+                    <div class="report-footer"><button class="upvote-button">${ICONS['arrow-up-circle-outline']}${r.upvotes} Upvotes</button></div>
+                </div>
+            </div>`).join('');
+    }
+
+    showReportDetails(reportId) {
+        const report = this.reportsData.find(r => r.id === reportId);
+        if (!report) return;
+
+        document.getElementById('modal-report-title').textContent = `Details for Report #${report.id}`;
+        const body = document.getElementById('modal-report-body');
+        const statusClass = { Reported: 'tag-status-reported', 'In Progress': 'tag-status-inprogress', Resolved: 'tag-status-resolved' };
+        const priorityClass = { Low: 'tag-priority-low', Medium: 'tag-priority-medium', High: 'tag-priority-high' };
+
+        body.innerHTML = `
+            <div style="display:flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                <div><span class="tag ${statusClass[report.status]}">${DOMPurify.sanitize(report.status)}</span></div>
+                <div><span class="tag tag-priority ${priorityClass[report.priority]}">${DOMPurify.sanitize(report.priority)} Priority</span></div>
+            </div>
+            <h4 style="font-weight: 600; color: var(--gray-700);">Issue: ${DOMPurify.sanitize(report.type)}</h4>
+            <p style="color: var(--gray-600);">${DOMPurify.sanitize(report.desc)}</p>
+            <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div><strong>Location:</strong><br>${DOMPurify.sanitize(report.location)}</div>
+                <div><strong>Ward:</strong><br>${DOMPurify.sanitize(report.ward)}</div>
+                <div><strong>Date Reported:</strong><br>${DOMPurify.sanitize(report.date)}</div>
+                <div><strong>Contact Phone:</strong><br>${DOMPurify.sanitize(report.phone) || 'Not Provided'}</div>
+            </div>
+            <hr style="border: none; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
+            <h5 style="font-weight:600; color:#374151; margin-bottom:1rem;">Audit Log</h5>
+            <div>${report.auditLog.map(log => `<div style="margin-bottom: 0.5rem;"><p style="font-size:0.875rem; color:#1f2937; margin: 0;"><strong>${DOMPurify.sanitize(log.user)}</strong>: ${DOMPurify.sanitize(log.action)}</p><p style="font-size:0.75rem; color:#9ca3af; margin:0;">${DOMPurify.sanitize(log.timestamp)}</p></div>`).join('')}</div>
+        `;
+        this.showModal('report-details-modal');
+    }
+
+    setupNewReportForm() {
+        const form = document.getElementById('new-report-form');
+        const descriptionEl = document.getElementById('issueDescription');
+
+        if (!form.dataset.listenerAttached) {
+            form.onsubmit = e => this.handleReportSubmit(e);
+            descriptionEl.addEventListener('input', () => {
+                clearTimeout(this.aiTypingTimer);
+                this.aiTypingTimer = setTimeout(() => this.handleAutoSuggestCategory(), 800);
+            });
+            descriptionEl.addEventListener('blur', () => {
+                this.handleAIEnhance();
+            });
+            form.dataset.listenerAttached = 'true';
+        }
+    }
+
+    async handleAIEnhance() {
+        const descriptionEl = document.getElementById('issueDescription');
+        const enhancementText = " [AI Enhanced]";
+        if (descriptionEl.value.length < 15 || descriptionEl.value.includes(enhancementText)) {
+            return;
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));
+        descriptionEl.value = descriptionEl.value.trim() + enhancementText;
+        this.showToast('Description enhanced by AI!', 'success');
+    }
+
+    handleAutoSuggestCategory() {
+        const desc = document.getElementById('issueDescription').value.toLowerCase();
+        const categorySelect = document.getElementById('issueCategory');
+        if (desc.length < 10) return;
+
+        const keywords = {
+            'Pothole': [/pothole/, /pot hole/, /hole/, /road surface/, /asphalt/, /pavement/, /crack/],
+            'Streetlight Out': [/streetlight/, /street light/, /lamp post/, /light out/, /dark street/, /lamp not working/],
+            'Missed Garbage': [/garbage/, /trash/, /recycling/, /waste/, /missed collection/, /bin not empty/],
+            'Drainage Issue': [/drain/, /clogged/, /flooding/, /gutter/, /standing water/, /culvert/],
+            'Fallen Tree': [/tree/, /fallen/, /branch/, /blocking road/, /wood/],
+            'Vandalism': [/vandalism/, /damaged/, /destroyed/, /defaced/, /smashed/],
+            'Graffiti': [/graffiti/, /spray paint/, /tagged/, /tagging/],
+        };
+
+        let suggestedCategory = 'Other';
+        for (const category in keywords) {
+            if (keywords[category].some(regex => regex.test(desc))) {
+                suggestedCategory = category;
+                break;
+            }
+        }
+        if (categorySelect.value !== suggestedCategory) {
+            categorySelect.value = suggestedCategory;
+            this.showToast(`AI suggested category: ${suggestedCategory}`, 'info');
+        }
+    }
+
+    validateForm(form) {
+        let isValid = true;
+        document.querySelectorAll('.form-error-message').forEach(el => el.style.display = 'none');
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            const errorEl = form.querySelector(`.form-error-message[data-for="${field.id}"]`);
+            if (!field.value) {
+                isValid = false;
+                errorEl.textContent = 'This field is required.';
+                errorEl.style.display = 'block';
+            }
+        });
+        const phoneField = form.querySelector('#phoneNumber');
+        if (phoneField.value && !phoneField.checkValidity()) {
+            isValid = false;
+            const errorEl = form.querySelector(`.form-error-message[data-for="phoneNumber"]`);
+            errorEl.textContent = 'Please enter a valid phone number format.';
+            errorEl.style.display = 'block';
+        }
+        return isValid;
+    }
+    
+    // =================================================================
+    // =========== THIS IS THE MODIFIED FUNCTION FOR BACKEND ===========
+    // =================================================================
+    async handleReportSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        if (!this.validateForm(form)) {
+            this.showToast('Please fix the errors before submitting.', 'error');
+            return;
+        }
+
+        const submitButton = document.getElementById('submit-report-button');
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<div class="spinner"></div>Submitting...`;
+        
+        // --- Prepare data for backend and local use ---
+        const report = {
+            type: document.getElementById('issueCategory').value,
+            location: document.getElementById('issueLocation').value,
+            ward: document.getElementById('wardSelection').value,
+            phone: document.getElementById('phoneNumber').value,
+            desc: document.getElementById('issueDescription').value,
+            priority: document.getElementById('priorityLevel').value,
+        };
+
+        // --- NEW: Send data to the backend ---
+        try {
+            const response = await fetch('https://backend-qijp.onrender.com/api/submit-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: report.type,
+                    location: report.location,
+                    desc: report.desc
+                })
+            });
+
+            if (!response.ok) {
+                // If server responds with an error status (like 400 or 500)
+                throw new Error(`Backend error: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('Backend Response:', result);
+            this.showToast('Report sent to authorities via WhatsApp!', 'success');
+
+        } catch (error) {
+            console.error('Failed to submit report to backend:', error);
+            this.showToast('Failed to send report. Please try again.', 'error');
+            
+            // Re-enable the button if backend fails
+            submitButton.disabled = false;
+            submitButton.innerHTML = `Submit Secure Report <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M336 208v-95a80 80 0 00-160 0v95" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="96" y="208" width="320" height="272" rx="48" ry="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>`;
+            return; // Stop execution if backend fails
+        }
+
+        // --- Original logic (runs only if backend submission was successful) ---
+        const newId = `CV-${String(Date.now()).slice(-4)}`;
+        this.reportsData.unshift({ ...report, id: newId, status: 'Reported', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), upvotes: 0, department: 'Unassigned', auditLog: [{user: 'System', action: 'Created', timestamp: new Date().toLocaleString()}] });
+        this._saveData();
+
+        this.showToast('Success! Your report has been submitted locally.', 'info');
+        form.reset();
+        setTimeout(() => { this.showView('myReportsView'); }, 1000);
+
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.innerHTML = `Submit Secure Report <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M336 208v-95a80 80 0 00-160 0v95" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="96" y="208" width="320" height="272" rx="48" ry="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>`;
+    }
 
 
-validateForm(form) {
-let isValid = true;
-document.querySelectorAll('.form-error-message').forEach(el => el.style.display = 'none');
-const requiredFields = form.querySelectorAll('[required]');
-requiredFields.forEach(field => {
-const errorEl = form.querySelector(`.form-error-message[data-for="${field.id}"]`);
-if (!field.value) {
-isValid = false;
-errorEl.textContent = 'This field is required.';
-errorEl.style.display = 'block';
-}
-});
-const phoneField = form.querySelector('#phoneNumber');
-if (phoneField.value && !phoneField.checkValidity()) {
-isValid = false;
-const errorEl = form.querySelector(`.form-error-message[data-for="phoneNumber"]`);
-errorEl.textContent = 'Please enter a valid phone number format.';
-errorEl.style.display = 'block';
-}
-return isValid;
-}
+    setupMediaUploadForm() {
+        const form = document.getElementById('media-upload-form');
+        form.onsubmit = (e) => this.handleMediaUploadSubmit(e);
+        const setupPreview = (inputId, previewId, placeholderId) => {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+            input.onchange = () => {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        placeholder.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.src = '';
+                    preview.style.display = 'none';
+                    placeholder.style.display = 'block';
+                }
+            };
+        };
+        setupPreview('mediaPhoto', 'photo-preview', 'photo-placeholder');
+        setupPreview('mediaVideo', 'video-preview', 'video-placeholder');
+    }
 
-async handleReportSubmit(e) {
-e.preventDefault();
-const form = e.target;
-if (!this.validateForm(form)) {
-this.showToast('Please fix the errors before submitting.', 'error');
-return;
-}
+    async handleMediaUploadSubmit(e) {
+        e.preventDefault();
+        const submitButton = document.getElementById('submit-media-button');
+        submitButton.disabled = true;
+        submitButton.innerHTML = `<div class="spinner"></div>Uploading...`;
 
-const submitButton = document.getElementById('submit-report-button');
-submitButton.disabled = true;
-submitButton.innerHTML = `<div class="spinner"></div>Submitting...`;
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
-await new Promise(resolve => setTimeout(resolve, 1500));
+        this.showToast('Success! Your media has been uploaded.', 'success');
+        document.getElementById('media-upload-form').reset();
+        ['photo', 'video'].forEach(type => {
+            document.getElementById(`${type}-preview`).style.display = 'none';
+            document.getElementById(`${type}-placeholder`).style.display = 'block';
+        });
 
-const report = {
-type: document.getElementById('issueCategory').value,
-location: document.getElementById('issueLocation').value,
-ward: document.getElementById('wardSelection').value,
-phone: document.getElementById('phoneNumber').value,
-desc: document.getElementById('issueDescription').value,
-priority: document.getElementById('priorityLevel').value,
-};
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Upload Media';
+    }
 
-const newId = `CV-${String(Date.now()).slice(-4)}`;
-this.reportsData.unshift({ ...report, id: newId, status: 'Reported', date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }), upvotes: 0, department: 'Unassigned', auditLog: [{user: 'System', action: 'Created', timestamp: new Date().toLocaleString()}] });
-this._saveData(); // Save to localStorage
+    renderKnowledgeBase(searchTerm = '') {
+        const container = document.getElementById('knowledge-base-container');
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        const filteredData = knowledgeBaseData.map(cat => ({
+            category: cat.category,
+            qa: cat.qa.filter(item => item.q.toLowerCase().includes(lowerSearchTerm) || item.a.toLowerCase().includes(lowerSearchTerm))
+        })).filter(cat => cat.qa.length > 0);
+        container.innerHTML = filteredData.map(cat => `
+            <div class="dashboard-list-card animate-fade-in"><h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin-bottom: 1rem;">${DOMPurify.sanitize(cat.category)}</h3><div>
+            ${cat.qa.map(item => `<div style="border-bottom: 1px solid var(--gray-200);"><div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; cursor: pointer;" onclick="app.toggleAccordion(this)"><h4 style="font-weight: 600; color: var(--gray-700); margin:0;">${DOMPurify.sanitize(item.q)}</h4><span class="accordion-icon" style="transition: transform 0.3s;">${ICONS['chevron-down-outline']}</span></div><div class="accordion-content" style="max-height:0; overflow:hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out;"><p style="padding: 0 0.75rem 1rem 0.75rem; color: var(--gray-600); margin:0;">${DOMPurify.sanitize(item.a)}</p></div></div>`).join('')}
+            </div></div>`).join('');
+    }
 
-this.showToast('Success! Your report has been submitted.', 'success');
-form.reset();
-setTimeout(() => { this.showView('myReportsView'); }, 1000);
+    toggleAccordion(element) {
+        const content = element.nextElementSibling;
+        const icon = element.querySelector('.accordion-icon');
+        if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
+            content.style.maxHeight = content.scrollHeight + 'px';
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            content.style.maxHeight = '0px';
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
 
-submitButton.disabled = false;
-submitButton.innerHTML = `Submit Secure Report <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M336 208v-95a80 80 0 00-160 0v95" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="96" y="208" width="320" height="272" rx="48" ry="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg>`;
-}
-
-setupMediaUploadForm() {
-const form = document.getElementById('media-upload-form');
-form.onsubmit = (e) => this.handleMediaUploadSubmit(e);
-const setupPreview = (inputId, previewId, placeholderId) => {
-const input = document.getElementById(inputId);
-const preview = document.getElementById(previewId);
-const placeholder = document.getElementById(placeholderId);
-input.onchange = () => {
-const file = input.files[0];
-if (file) {
-const reader = new FileReader();
-reader.onload = e => {
-preview.src = e.target.result;
-preview.style.display = 'block';
-placeholder.style.display = 'none';
-};
-reader.readAsDataURL(file);
-} else {
-preview.src = '';
-preview.style.display = 'none';
-placeholder.style.display = 'block';
-}
-};
-};
-setupPreview('mediaPhoto', 'photo-preview', 'photo-placeholder');
-setupPreview('mediaVideo', 'video-preview', 'video-placeholder');
-}
-
-async handleMediaUploadSubmit(e) {
-e.preventDefault();
-const submitButton = document.getElementById('submit-media-button');
-submitButton.disabled = true;
-submitButton.innerHTML = `<div class="spinner"></div>Uploading...`;
-
-await new Promise(resolve => setTimeout(resolve, 2000));
-
-this.showToast('Success! Your media has been uploaded.', 'success');
-document.getElementById('media-upload-form').reset();
-['photo', 'video'].forEach(type => {
-document.getElementById(`${type}-preview`).style.display = 'none';
-document.getElementById(`${type}-placeholder`).style.display = 'block';
-});
-
-submitButton.disabled = false;
-submitButton.innerHTML = 'Upload Media';
-}
-
-renderKnowledgeBase(searchTerm = '') {
-const container = document.getElementById('knowledge-base-container');
-const lowerSearchTerm = searchTerm.toLowerCase();
-const filteredData = knowledgeBaseData.map(cat => ({
-category: cat.category,
-qa: cat.qa.filter(item => item.q.toLowerCase().includes(lowerSearchTerm) || item.a.toLowerCase().includes(lowerSearchTerm))
-})).filter(cat => cat.qa.length > 0);
-// SECURITY: Sanitize all knowledge base content before rendering.
-container.innerHTML = filteredData.map(cat => `
-<div class="dashboard-list-card animate-fade-in"><h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-800); margin-bottom: 1rem;">${DOMPurify.sanitize(cat.category)}</h3><div>
-${cat.qa.map(item => `<div style="border-bottom: 1px solid var(--gray-200);"><div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; cursor: pointer;" onclick="app.toggleAccordion(this)"><h4 style="font-weight: 600; color: var(--gray-700); margin:0;">${DOMPurify.sanitize(item.q)}</h4><span class="accordion-icon" style="transition: transform 0.3s;">${ICONS['chevron-down-outline']}</span></div><div class="accordion-content" style="max-height:0; overflow:hidden; transition: max-height 0.3s ease-out, padding 0.3s ease-out;"><p style="padding: 0 0.75rem 1rem 0.75rem; color: var(--gray-600); margin:0;">${DOMPurify.sanitize(item.a)}</p></div></div>`).join('')}
-</div></div>`).join('');
-}
-
-toggleAccordion(element) {
-const content = element.nextElementSibling;
-const icon = element.querySelector('.accordion-icon');
-if (content.style.maxHeight === '0px' || !content.style.maxHeight) {
-content.style.maxHeight = content.scrollHeight + 'px';
-icon.style.transform = 'rotate(180deg)';
-} else {
-content.style.maxHeight = '0px';
-icon.style.transform = 'rotate(0deg)';
-}
-}
-
-exportToCSV() {
-const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-const dataToExport = activeFilter === 'All' ? this.reportsData : this.reportsData.filter(c => c.status === activeFilter);
-if (dataToExport.length === 0) { this.showToast('No data to export!', 'error'); return; }
-const headers = ['id', 'type', 'status', 'priority', 'date', 'location', 'ward', 'desc', 'upvotes'];
-let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
-csvContent += dataToExport.map(row => headers.map(header => `"${(row[header] || '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
-const encodedUri = encodeURI(csvContent);
-const link = document.createElement("a");
-link.setAttribute("href", encodedUri);
-link.setAttribute("download", "civicsuite_reports_export.csv");
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
-this.showToast('Report data exported successfully.', 'success');
-}
+    exportToCSV() {
+        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+        const dataToExport = activeFilter === 'All' ? this.reportsData : this.reportsData.filter(c => c.status === activeFilter);
+        if (dataToExport.length === 0) { this.showToast('No data to export!', 'error'); return; }
+        const headers = ['id', 'type', 'status', 'priority', 'date', 'location', 'ward', 'desc', 'upvotes'];
+        let csvContent = "data:text/csv;charset=utf-8," + headers.join(',') + '\n';
+        csvContent += dataToExport.map(row => headers.map(header => `"${(row[header] || '').toString().replace(/"/g, '""')}"`).join(',')).join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "civicsuite_reports_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        this.showToast('Report data exported successfully.', 'success');
+    }
 }
 
 // Ensures the app class is globally accessible for inline onclick events
 let app;
 document.addEventListener('DOMContentLoaded', () => {
-app = new CivicSuiteApp();
+    app = new CivicSuiteApp();
 });
 </script>
 
